@@ -1,0 +1,105 @@
+.maincontener{
+    position: absolute; 
+    width: 200px; 
+    height: 100px; 
+    background: none; 
+    top: 50%; 
+    left: 50%; 
+    transform: translate(-50%, -50%)
+}
+.card{
+    position: relative; 
+    width: 100%; 
+    height: 100%; 
+    transform-style: preserve-3d; 
+    transition: all 0.8s ease;
+}
+.front{
+    position: absolute; 
+    width: 100%; 
+    height: 100%; 
+    backface-visibility:hidden; 
+    background: #ffc728; 
+    color: #000; 
+    text-align: center;
+}
+.back{
+    position: absolute; 
+    width: 100%; 
+    height: 100%; 
+    backface-visibility:hidden; 
+    background: purple; 
+    color: #fff; 
+    text-align: center; 
+    transform: rotateX(180deg);
+}
+.flipCard{
+    transform: rotateX(180deg);
+}
+body{
+    margin: 0;
+}
+header{
+    width: 100%;
+    position: sticky;
+    top: 0;
+    display: flex;
+    box-shadow: 0px 5px 5px rgba(0, 0, 0, 0.3);
+}
+.header_to_left{
+    display: flex;
+    width: 50%;
+    align-items: center;
+    justify-content: left;
+}
+
+.header_to_right{
+    display: flex;
+    width: 50%;
+    align-items: center;
+    justify-content: right;
+}
+.logo{
+    font-size: 20px; 
+    font-family: Copperplate; 
+    margin-left: 20px; 
+    font-weight: bold; 
+    background: linear-gradient(90deg, rgba(6,17,94,1) 24%, rgba(2,171,228,1) 87%); 
+    -webkit-text-fill-color: transparent; 
+    -webkit-background-clip: text;
+}
+.login{
+    background: rgb(22, 40, 174);
+    color: white;
+    font-family: Copperplate; 
+    border: none;
+    border-radius: 5px 5px 5px 5px;
+    outline: none;
+    display: flex;
+    margin-right: 30px;
+    height: 20px;
+    font-size: 12px;
+    align-items: center;
+    cursor: pointer;
+}
+footer{
+    width:100%;
+    background-color: #b4cbdd;
+    position: absolute;
+    display: flex;
+    bottom: 0;
+    left: 0;
+    font-size: 10px;
+    justify-content: center;
+}
+.footer-column{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    width: 25%;
+}
+.footer-column p{
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
