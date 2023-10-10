@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <header>
+        <div class="header_to_left"><p class="logo">Fiszkomania</p></div>
+        <div class="header_to_right"><button class="login" onclick="location.href='/login'">ZALOGUJ</button></div>
+    </header>
+    {% block body %}{% endblock %}
+    <footer>
+        <div class="footer-column">
+            <p>Link1</p>
+            <p>Link1</p>
+            <p>Link1</p>
+        </div>
+        <div class="footer-column">
+            <p>Link2</p>
+            <p>Link2</p>
+            <p>Link2</p>
+        </div>
+        <div class="footer-column">
+            <p>Link3</p>
+            <p>Link3</p>
+            <p>Link3</p>
+        </div>
+    </footer>
+</body>
+</html>

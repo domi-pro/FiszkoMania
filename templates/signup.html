@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>Sign up Page</title>
+{% endblock %}
+
+{% block body %}
+    
+<div style="width: 100%; height: 100%; position: relative; background: #A7D2EA">
+<div style="width: 539px; height: 721px; left: 450px; top: 224px; position: absolute; background: #F8F7F7; box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.25); border-radius: 15px"></div>
+<div style="width: 362px; height: 0px; left: 539px; top: 687px; position: absolute; border: 1px black solid"></div>
+<div style="left: 539px; top: 622px; position: absolute; text-align: center; color: #C9C5C5; font-size: 32px; font-family: Kulim Park; font-weight: 700; word-wrap: break-word">Repeat password</div>
+<div style="width: 362px; height: 0px; left: 539px; top: 585px; position: absolute; border: 1px black solid"></div>
+<div style="width: 1440px; height: 120px; left: 0px; top: 0px; position: absolute; background: #F8F7F7; box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.10)"></div>
+<div style="width: 170px; height: 55px; left: 1233px; top: 33px; position: absolute; background: #A7B1EA; border-radius: 10px"></div>
+<div style="left: 1263px; top: 47px; position: absolute; color: black; font-size: 24px; font-family: Kulim Park; font-weight: 400; word-wrap: break-word">zaloguj się</div>
+<div style="left: 84px; top: 40px; position: absolute; color: black; font-size: 36px; font-family: Kulim Park; font-weight: 400; word-wrap: break-word">FiszkoMania</div>
+<div style="width: 204px; height: 50px; left: 612px; top: 770px; position: absolute">
+<div style="width: 204px; height: 50px; left: 0px; top: 0px; position: absolute; background: #A7B1EA; border-radius: 10px"></div>
+<div style="width: 204px; height: 21.28px; left: 0px; top: 14px; position: absolute; text-align: center; color: black; font-size: 24px; font-family: Kulim Park; font-weight: 700; word-wrap: break-word">Zarejestruj</div>
+</div>
+<div style="width: 362px; height: 0px; left: 539px; top: 489px; position: absolute; border: 1px black solid"></div>
+<div style="left: 539px; top: 416px; position: absolute; text-align: center; color: #C9C5C5; font-size: 32px; font-family: Kulim Park; font-weight: 700; word-wrap: break-word">Username</div>
+
+    <div style="margin: auto; width: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center">
+        <h1>Zarejestruj się</h1>
+        <br>
+        <form method="post">
+            <input type="text" placeholder="Username" name="username" value="{{ request.form.username }}"><br>
+            <input type="password" placeholder="Password" name="password" value="{{ request.form.password}}"><br>
+            <input class="btn" type="submit" name="submit" value="Sign up">
+        </form>
+    </div>
+{% endblock %}
