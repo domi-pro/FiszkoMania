@@ -5,14 +5,18 @@
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
     {% block head %}{% endblock %}
 </head>
 <body>
     <header>
-        <div class="header_to_left"><p class="logo">Fiszkomania</p></div>
-        <div class="header_to_right"><button class="login" onclick="location.href='/login'">ZALOGUJ</button></div>
+        <div class="header_to_left"><p class="logo-header">FiszkoMania</p></div>
+        <div class="header_to_right"><button class="login-button" onclick="location.href='/login'">ZALOGUJ</button></div>
     </header>
-    {% block body %}{% endblock %}
+    <div class="main-background">
+        {% block body %}{% endblock %}
+    </div>
     <footer>
         <div class="footer-column">
             <p>Link1</p>
