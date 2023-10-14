@@ -261,3 +261,59 @@ ion-icon{
     margin-bottom: 20px;
     max-width: 90%;
 }
+
+.login-error{
+    font-size: 10px;
+    color: red;
+    width: 80%;
+}
+
+/* home.html */
+.panel-background{
+    background-color: #F8F7F7;
+    width: 80vw;
+    margin-top: 5vh;
+    margin-bottom: 5vh;
+    margin-left: 10vw;
+    margin-right: 10vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+}
+.card{
+    width: 20vw; 
+    height: 20vh; 
+    transform-style: preserve-3d; 
+    transition: all 0.8s ease;
+}
+.front{
+    position: absolute; 
+    border-radius: 5px;
+    width: 20vw; 
+    height: 20vh; 
+    backface-visibility:hidden; 
+    background: #D0E7F4; 
+    color: #000; 
+    text-align: center;
+    align-items: center;
+    display: flex;
+    justify-content: center
+}
+.back{
+    position: absolute; 
+    border-radius: 5px;
+    width: 20vw; 
+    height: 20vh; 
+    backface-visibility:hidden; 
+    background: #D0E7F4;
+    color: #000;
+    text-align: center; 
+    transform: rotateX(180deg);
+    align-items: center;
+    display: flex;
+    justify-content: center
+}
+.flipCard{
+    transform: rotateX(180deg);
+}
