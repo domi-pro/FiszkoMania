@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block head %}
+
+{% endblock %}
+
+{% block body %}
+<div class="maincontener">
+    <div class="card" id="card">
+    <div class="front">
+    <h1>{{hiszp_def}}</h1>
+    </div>
+    <div class="back">
+        <h1>{{pol_def}}</h1>
+    </div>
+</div>
+</div>
+<script>
+    const card = document.getElementById("card")
+    card.addEventListener("click", flipCard);
+
+    function flipCard(){
+        card.classList.toggle("flipCard");
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>Sign up Page</title>
+{% endblock %}
+
+{% block body %}
+    <div style="margin: auto; width: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center">
+        <h1>Sign Up</h1>
+        <br>
+        <h3 style="color: red">This username is already taken. Choose other name</h3>
+        <form method="post">
+            <input type="text" placeholder="Username" name="username" value="{{ request.form.username }}"><br>
+            <input type="password" placeholder="Password" name="password" value="{{ request.form.password}}"><br>
+            <input class="btn" type="submit" name="submit" value="Sign up">
+        </form>
+    </div>
+{% endblock %}
