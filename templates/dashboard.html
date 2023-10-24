@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{% endblock %}
+
+
+{% block body %}
+<div class="dashboard">
+<div class="user_information">
+    <div class="avatar"></div>
+    <div class="user-data">
+        <p><strong>Nazwa użytkownika:</strong> {{ current_user.username }}</p>
+        <a class="change_password" href="/change-password">Zmień hasło</a>
+    </div>
+</div>
+<div class="user_achievements"><p>Osiągnięcia</p></div>
+</div>
+{% endblock %}

@@ -5,15 +5,23 @@
 {% endblock %}
 
 {% block body %}
-    <div style="margin: auto; width: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center">
-        <h1>Zaloguj się</h1>
+    <div class="form-box">
+        <p class="form-title">Logowanie</p>
+        <hr class="form-line">
         <br>
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="login-error">
+                {{ messages[0] }}
+            </div>
+        {% endif %}
+        {% endwith %}
         <form method="post">
-            <input type="text" placeholder="Username" name="username" value="{{ request.form.username }}"><br>
-            <input type="password" placeholder="Password" name="password" value="{{ request.form.password}}"><br>
-            <input class="btn" type="submit" name="submit" value="Login">
+            <input type="text" placeholder="Username" name="username" class="username-input" value="{{ request.form.username }}"><br>
+            <input type="password" placeholder="Password" name="password" class="password-input" value="{{ request.form.password}}"><br>
+            <input class="btn" type="submit" name="submit" value="Zaloguj">
         </form>
         <br>
-        <a style="color: black;" href="/signup">Nie masz jeszcze konta? Zarejestruj się!</a>
+        <a class="create-account" href="/signup">Nie masz jeszcze konta? Zarejestruj się!</a>
     </div>
 {% endblock %}

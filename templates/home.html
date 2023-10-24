@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>Home Page</title>
+{% endblock %}
+
+{% block header %}
+<div class="header_to_right"><a href="{{url_for('logout')}}"><p>Wyloguj</p><ion-icon name="log-out-outline"></ion-icon></a></div>
+{% endblock %}
+
+{% block body %}
+<div class="panel-background">
+    <div class="card" id="card">
+        <div class="front">
+            <p>{{hiszp_def}}</p>
+        </div>
+        <div class="back">
+            <p>{{pol_def}}</p>
+        </div>
+    </div>
+    <script>
+        const card = document.getElementById("card")
+        card.addEventListener("click", flipCard);
+    
+        function flipCard(){
+            card.classList.toggle("flipCard");
+        }
+    </script>
+</div>
+{% endblock %}

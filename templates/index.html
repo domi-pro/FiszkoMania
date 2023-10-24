@@ -4,23 +4,38 @@
 
 {% endblock %}
 
-{% block body %}
-<div class="maincontener">
-    <div class="card" id="card">
-    <div class="front">
-    <h1>{{hiszp_def}}</h1>
-    </div>
-    <div class="back">
-        <h1>{{pol_def}}</h1>
-    </div>
-</div>
-</div>
-<script>
-    const card = document.getElementById("card")
-    card.addEventListener("click", flipCard);
 
-    function flipCard(){
-        card.classList.toggle("flipCard");
-    }
-</script>
+{% block body %}
+<div class="main-left">
+    <div class="outter-add-block">
+        <div class="add-block">
+            <div class="circle-box">
+                <ion-icon name="ellipse"></ion-icon>
+            </div>
+            <p class="add-text">Zawsze pod ręką</p>
+        </div>
+        <div class="add-block">
+            <div class="circle-box">
+                <ion-icon name="ellipse"></ion-icon>
+            </div>
+            <p class="add-text">Zweryfikowane treści</p>
+        </div>
+        <div class="add-block">
+            <div class="circle-box">
+                <ion-icon name="ellipse"></ion-icon>
+            </div>
+            <p class="add-text">Przystępna forma nauki</p>
+        </div>
+    </div>
+    <div class="outter-signup-button">
+        <div class="signup-button"><strong>Zarejestruj się</strong></div>
+    </div>
+</div>
+<div class="main-right">
+    <div class="flashcards">
+        <div class="flashcard-white"></div>
+        <div class="flashcard-blue"></div>
+    </div>
+    <div class="page-name">FiszkoMania</div>
+</div>
 {% endblock %}

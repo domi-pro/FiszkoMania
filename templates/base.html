@@ -5,14 +5,29 @@
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{url_for('static', filename='javascript/script.js')}}"></script>
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
     {% block head %}{% endblock %}
 </head>
 <body>
     <header>
-        <div class="header_to_left"><p class="logo">Fiszkomania</p></div>
-        <div class="header_to_right"><button class="login" onclick="location.href='/login'">ZALOGUJ</button></div>
+        <div class="header_to_left"><p class="logo-header">FiszkoMania</p></div>
+        {% if current_user.is_authenticated %}
+            <div class="header_to_right"><button class="user-button" onclick="RollDownUserMenu()"><p class="logout">{{current_user.username}}</p><ion-icon name="person-outline"></ion-icon></button>
+                <div id="user-menu" class="hidden">
+                    <a class="logout" href="/dashboard">Moje konto</a>
+                    <hr style="width: 100%; height: 0.75px; border-width: 0; background-color: #A7B1EA">
+                    <a class="logout" href="{{url_for('logout')}}">Wyloguj<ion-icon name="log-out-outline"></ion-icon></a></div>
+            </div>
+            <!--<div class="header_to_right"><a class="logout" href="{{url_for('logout')}}"><p>Wyloguj</p><ion-icon name="log-out-outline"></ion-icon></a></div>-->
+        {% else %}
+            <div class="header_to_right"><div class="login-button-outter"><button class="login-button" onclick="location.href='/login'">ZALOGUJ</button></div></div>
+        {% endif %}
     </header>
-    {% block body %}{% endblock %}
+    <div class="main-background">
+        {% block body %}{% endblock %}
+    </div>
     <footer>
         <div class="footer-column">
             <p>Link1</p>
