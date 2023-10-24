@@ -19,11 +19,13 @@ header{
 }
 
 .header_to_right{
-    display: flex;
+    margin-right: 10px;
     width: 50%;
     height: 15vh;
+    /*
+    display: flex;
     align-items: center;
-    justify-content: right;
+    justify-content: right; */
 }
 .logo-header{
     color: black; 
@@ -32,19 +34,70 @@ header{
     word-wrap: break-word;
     margin-left: 30px;
 }
+.login-button-outter{
+    display: flex;
+    margin-left: auto;
+    width: 20%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+}
 .login-button{
     border-radius: 5px;
     background: #A7B1EA;
     border: none;
     outline: none;
     display: flex;
-    margin-right: 30px;
-    height: 20px;
-    width: 15%;
     font-size: 8px;
     align-items: center;
-    justify-content: center;
     cursor: pointer;
+    justify-content: center;
+    height: 30%;
+    margin-left: auto;
+    margin-right: 10px;
+    width: 100%;
+}
+ion-icon[name="log-out-outline"]{
+    width: 20px;
+}
+.logout{
+    margin-right:10px;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    font-size: 0.7em;
+    color: #000;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+.user-button{
+    cursor: pointer;
+    border: none;
+    background: none;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    margin-left: auto;
+    margin-right: 10px;
+    width: 20%;
+}
+.user-menu{
+    display: flex;
+    flex-direction: column;
+    width: 20%;
+    padding: 8px;
+    background: #F8F7F7;
+    margin-left: auto;
+    margin-right: 10px;
+    border-radius: 0px 0px 5px 5px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #A7B1EA;
+}
+.hidden{
+    display: none;
 }
 footer{
     width:100%;
@@ -111,7 +164,7 @@ footer{
     width: 20%;
     height:100%;
 }
-ion-icon{
+ion-icon[name="ellipse"]{
     width: 100%;
     height: 80%;
     color: #A7D2EA;
@@ -266,6 +319,59 @@ ion-icon{
     font-size: 10px;
     color: red;
     width: 80%;
+}
+
+/* dashboard.html */
+.dashboard{
+    width: 70vw;
+    min-height: 40vh;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 5%;
+    margin-bottom: 5%;
+    border-radius: 15px;
+    background: #F8F7F7;
+    box-shadow: 4px 4px 4px 0px rgba(0, 0, 0, 0.25); 
+    text-align: center;
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+}
+
+.user_information{
+    width: 40%;
+    height:100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-radius: 15px 0px 0px 15px;
+    border-right-style: solid;
+    border-color: #A7B1EA;
+}
+
+.avatar{
+    width: 70px;
+    height: 70px;
+    margin-top: 30px;
+    background: green;
+}
+
+.user-data{
+    width: 80%;
+    text-align: left;
+    margin-top: 10px;
+    font-size: 0.6em;
+}
+
+.user_achievements{
+    width: 60%;
+    height:100%;
+    border-radius: 0px 15px 15px 0px;
+}
+
+.change_password{
+    color: #000;
+    text-decoration: none;
 }
 
 /* home.html */
