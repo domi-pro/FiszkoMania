@@ -7,7 +7,21 @@
 {% block body %}
 <div class="dashboard">
 <div class="user_information">
-    <div class="avatar"></div>
+    <div class="avatar" {% if current_user.profile_picture %} style="background-image: url('static/images/{{current_user.profile_picture}}')"{% endif %}>
+        <button class="edit_profile_pic_icon" onclick='showChangePicOptions()'><ion-icon name="pencil-outline"></ion-icon></button>
+    </div>
+    <div class="hidden" id="change_profile_pic">
+    <form class="change_photo_form" action="/add-avatar" method="POST" enctype="multipart/form-data">
+        <div class="image_selector">
+            {% for image_file in image_files %}
+                <input name="image_option" type="radio" id="{{image_file}}" value="{{image_file}}" style="background-image: url('static/images/default/{{image_file}}');"/>
+            {% endfor %}
+        </div>
+    
+    <input id="profile_picture" type="file" name="profile_picture" accept="image/*">
+    <input class="btn-change" type="submit" name="submit" value="Zapisz">
+    </form>
+    </div>
     <div class="user-data">
         <p><strong>Nazwa użytkownika:</strong> {{ current_user.username }}</p>
         <a class="change_password" href="/change-password">Zmień hasło</a>
