@@ -9,15 +9,22 @@ import sqlite3
 from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
+import uuid as uuid
+import os
+
 # App setup
 app = Flask(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SECRET_KEY'] = 'many random bytes'
-
+UPLOAD_FOLDER = 'static/images'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -33,7 +40,7 @@ class Users(db.Model, UserMixin):
     username = db.Column(db.String(200), nullable=False, unique=True)
     password = db.Column(db.String(200), nullable=False, unique=True)
     date_added = db.Column(db.DateTime, default=datetime.utcnow)
-
+    profile_picture = db.Column(db.String(), nullable=True)
     def __repr__(self):
         return '<Name %r>' % self.username
 
@@ -109,7 +116,28 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template('dashboard.html')
+    image_files = [f for f in os.listdir('static/images/default') if f.endswith(('jpg', 'png', 'gif'))]
+    return render_template('dashboard.html', image_files=image_files)
+
+@app.route('/add-avatar', methods=['GET', 'POST'])
+@login_required
+def add_avatar():
+    image_files = [f for f in os.listdir('static/images/default') if f.endswith(('jpg', 'png', 'gif'))]
+    if request.method == 'POST':
+        if request.files['profile_picture']:
+            profile_picture = request.files['profile_picture']
+            user_update = Users.query.get_or_404(current_user.id)
+            user_update.profile_picture = profile_picture
+            picture_file_name = secure_filename(user_update.profile_picture.filename)
+            picture_unique_name = str(uuid.uuid1()) + '_' + picture_file_name
+            user_update.profile_picture = picture_unique_name
+            profile_picture.save(os.path.join(app.config['UPLOAD_FOLDER'], picture_unique_name))
+        elif request.form.get('image_option'):
+            profile_picture = 'default/'+request.form['image_option']
+            user_update = Users.query.get_or_404(current_user.id)
+            user_update.profile_picture = profile_picture  
+        db.session.commit()
+    return render_template('dashboard.html', image_files=image_files)
 
 @app.route('/change-password', methods=['GET', 'POST'])
 @login_required

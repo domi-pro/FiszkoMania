@@ -354,6 +354,76 @@ ion-icon[name="ellipse"]{
     height: 70px;
     margin-top: 30px;
     background: green;
+    border-radius: 50%;
+    background-size: cover;
+}
+
+.mini-avatar{
+    width: 40%;
+    height: auto;
+    border-radius: 50%;
+    background-size: cover;
+}
+
+.edit_profile_pic_icon{
+    width:30%;
+    height:30%;
+    background-color: #F8F7F7;
+    border-radius: 50%;
+    object-fit: contain;
+    display: flex;
+    margin-top: 70%;
+    margin-left: 70%;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+ion-icon[name="pencil-outline"]{
+    width: 90%;
+}
+
+.change_photo_form{
+    width: 30%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    background-color: #F8F7F7;
+    border: solid;
+    border-radius: 15px;
+    border-width: 1px;
+    border-color: #000;
+    flex-direction: column;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.10);
+}
+.image_selector{
+    display: flex;
+    width: 100%;
+    justify-content: space-around;
+}
+input:is([type="radio"]){
+    -webkit-appearance: none;
+    background-size: cover;
+    width: 2em;
+	height: 2em;
+    border-radius: 50%;
+    cursor: pointer;
+}
+input:is([type="radio"]):checked{
+    border: solid;
+    border-color: blueviolet;
+}
+
+
+ion-icon[name="add-outline"]{
+    width: 1.5em;
+	height: 1.5em;
+    border-radius: 50%;
+    background: grey;
 }
 
 .user-data{
