@@ -13,3 +13,7 @@ function showOutline(){
         console.log(el);
     });
 }
+
+function DisplayFlashcardsFrom(table_name){
+    window.location.href = "/modul-" + table_name;
+}
