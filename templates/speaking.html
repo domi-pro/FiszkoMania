@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>Speaking</title>
+{% endblock %}
+
+{% block body %}
+<div class="panel-background">
+    <div class="flashcards-panel">
+        <h3 class="module-title">{{table_name}} - listening</h3>
+        <div class="flashcard-learn">
+            <div class="word-card"></div>
+            <div class="user-answer">
+                <p id="spoken-text"></p><button class="microphone-button" onclick="startSpeakRecognition()"><ion-icon name="mic-outline"></ion-icon></button>
+            </div>
+            <div class="correct-answer"></div>
+            <button class="next-word" onclick="ShowNewWordToGuess()">Next ></button>
+        </div>
+    </div>
+    <script>
+        const flashcards_table = {{ flashcards | tojson }};
+        let speaking_answer;
+        document.addEventListener('keypress', CheckIfCorrect);
+        window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const textField = document.querySelector('.answer-input')
+        const recognition = new window.SpeechRecognition();
+        recognition.interimResults = false; // if true it gives us results while talking and if false gives result after we finish talking
+        recognition.lang = "es-ES";
+        recognition.addEventListener('result', (e)=> {
+            console.log("slucham");
+            speaking_answer = e.results[0][0].transcript;
+            document.querySelector('#spoken-text').textContent = speaking_answer;
+            recognition.stop();
+        });
+        function startSpeakRecognition(){
+            //document.querySelector('#spoken-text').textContent = "";
+            recognition.start();
+        }
+        function ShowNewWordToGuess(){
+            const index = Math.floor(Math.random() * flashcards_table.length);
+            answer = flashcards_table[index][2];
+            document.querySelector('.word-card').textContent = flashcards_table[index][1];
+            document.querySelector('.correct-answer').style.display = "none";
+            document.querySelector('.correct-answer').textContent = "";
+            document.querySelector('.next-word').style.display = "none";
+            document.querySelector('#spoken-text').textContent = "";
+            document.querySelector('.microphone-button').disabled = false;
+            document.querySelector('#spoken-text').style.color = 'black';
+        }
+        function CheckIfCorrect(e){
+            if (e.key === 'Enter') {
+                const input = document.querySelector('#spoken-text').textContent;
+                console.log(input);
+                if( input === answer){
+                    console.log("good");
+                    document.querySelector('#spoken-text').style.color = 'green';
+                } else {
+                    console.log("bad");
+                    document.querySelector('#spoken-text').style.color = 'red';
+                    document.querySelector('.correct-answer').style.display = "flex";
+                    document.querySelector('.correct-answer').textContent = "Poprawna odpowiedź: " + answer;
+                }
+                document.querySelector('.next-word').style.display = "flex";
+                document.querySelector('.microphone-button').disabled = true;
+            }
+        }
+        ShowNewWordToGuess();
+    </script>
+</div>
+{% endblock %}

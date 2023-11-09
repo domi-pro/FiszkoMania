@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>Listening</title>
+{% endblock %}
+
+{% block body %}
+<div class="panel-background">
+    <div class="flashcards-panel">
+        <h3 class="module-title">{{table_name}} - listening</h3>
+        <div class="flashcard-learn">
+            <div class="sound-card"><button onclick="speakWord()"><ion-icon name="play-circle-outline"></ion-icon></button></div>
+            <div class="answer-input">
+                <input id="input-answer" type="text" focus></div>
+            </div>
+            <div class="correct-answer"></div>
+            <button class="next-word" onclick="ShowNewWordToGuess()">Next ></button>
+        </div>
+    </div>
+    <script>
+        const flashcards_table = {{ flashcards |tojson }};
+        let answer;
+        document.addEventListener('keypress', CheckIfCorrect);
+        function speakWord() {
+            var utterance = new SpeechSynthesisUtterance();
+            utterance.text = answer;
+            utterance.lang = 'es';
+            window.speechSynthesis.speak(utterance);
+        }
+        function ShowNewWordToGuess(){
+            const index = Math.floor(Math.random() * flashcards_table.length);
+            answer = flashcards_table[index][2];
+            console.log(answer);
+            document.querySelector('.correct-answer').style.display = "none";
+            document.querySelector('.correct-answer').textContent = "";
+            document.querySelector('.next-word').style.display = "none";
+            document.querySelector('#input-answer').value = "";
+            document.querySelector('#input-answer').style.color = "black";
+            document.querySelector('#input-answer').disabled = false;
+            document.querySelector('#input-answer').focus();
+        }
+        function CheckIfCorrect(e){
+            if (e.key === 'Enter') {
+                    if(document.querySelector('#input-answer').disabled === false){
+                        const input = document.querySelector('#input-answer').value;
+                        if( input === answer){
+                            document.querySelector('#input-answer').style.color = 'green';
+                        } else {
+                            document.querySelector('#input-answer').style.color = 'red';
+                            document.querySelector('.correct-answer').style.display = "flex";
+                            document.querySelector('.correct-answer').textContent = "Poprawna odpowiedź: " + answer;
+                        }
+                        document.querySelector('#input-answer').disabled = true;
+                        document.querySelector('.next-word').style.display = "flex";
+                    } else {
+                        ShowNewWordToGuess();
+                    }
+                }
+        }
+        ShowNewWordToGuess();
+    </script>
+</div>
+{% endblock %}

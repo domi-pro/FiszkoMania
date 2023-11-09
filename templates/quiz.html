@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>Quiz</title>
+{% endblock %}
+
+{% block body %}
+<div class="panel-background">
+    <div class="flashcards-panel">
+        <h3 class="module-title">{{table_name}} - quiz</h3>
+        <div class="flashcard-learn">
+            <div class="word-card"></div>
+            <div class="quiz-answers">
+                <div class="row-answers">
+                    <button class="word-card-answer" id="answer-1" onclick="CheckIfCorrect(this.id)"></button>
+                    <button class="word-card-answer" id="answer-2" onclick="CheckIfCorrect(this.id)"></button>
+                </div>
+                <div class="row-answers">
+                    <button class="word-card-answer" id="answer-3" onclick="CheckIfCorrect(this.id)"></button>
+                    <button class="word-card-answer" id="answer-4" onclick="CheckIfCorrect(this.id)"></button>
+                </div>
+            </div>
+            <div class="correct-answer"></div>
+            <button class="next-word" onclick="ShowNewWordToGuess()">Next ></button>
+        </div>
+    </div>
+    <script>
+        const flashcards_table = {{ flashcards | tojson }};
+        let correct_answer;
+        //document.addEventListener('keypress', CheckIfCorrect);
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function ShowNewWordToGuess(){
+            const corrent_index = Math.floor(Math.random() * flashcards_table.length);
+            correct_answer = flashcards_table[corrent_index][2];
+            document.querySelector('.correct-answer').style.display = "none";
+            document.querySelector('.correct-answer').textContent = "";
+            document.querySelector('.next-word').style.display = "none";
+            document.querySelector('.word-card').textContent = flashcards_table[corrent_index][1];
+            console.log("dupa");
+            document.querySelector('#answer-1').style.borderStyle = "none";
+            document.querySelector('#answer-2').style.borderStyle = "none";
+            document.querySelector('#answer-3').style.borderStyle = "none";
+            document.querySelector('#answer-4').style.borderStyle = "none";
+            document.querySelector('#answer-1').disabled = false;
+            document.querySelector('#answer-2').disabled = false;
+            document.querySelector('#answer-3').disabled = false;
+            document.querySelector('#answer-4').disabled = false;
+            const allAnswers = [];
+            while (allAnswers.length < 3) {
+                const randomIncorrectIndex = Math.floor(Math.random() * flashcards_table.length);
+                const incorrectWord = flashcards_table[randomIncorrectIndex][2];
+                if (incorrectWord !== correct_answer && !allAnswers.includes(incorrectWord)) {
+                    allAnswers.push(incorrectWord);
+                }
+            }
+            allAnswers.push(correct_answer);
+            shuffle(allAnswers);
+            console.log(allAnswers);
+            document.querySelector('#answer-1').textContent = allAnswers[0];
+            document.querySelector('#answer-2').textContent = allAnswers[1];
+            document.querySelector('#answer-3').textContent = allAnswers[2];
+            document.querySelector('#answer-4').textContent = allAnswers[3];
+        }
+        function CheckIfCorrect(index){
+            console.log(index);
+            const selector = '#' + index;
+            const selected_answer = document.querySelector(selector).textContent;
+            if (selected_answer !== correct_answer){
+                document.querySelector(selector).style.border = "solid red";
+                document.querySelector('.correct-answer').style.display = "flex";
+                document.querySelector('.correct-answer').textContent = "Poprawna odpowiedź: " + correct_answer;
+            }
+            if (document.querySelector('#answer-1').textContent === correct_answer){
+                document.querySelector('#answer-1').style.border = "solid green";
+            } else if (document.querySelector('#answer-2').textContent === correct_answer){
+                document.querySelector('#answer-2').style.border = "solid green";
+            } else if (document.querySelector('#answer-3').textContent === correct_answer){
+                document.querySelector('#answer-3').style.border = "solid green";
+            } else if (document.querySelector('#answer-4').textContent === correct_answer){
+                document.querySelector('#answer-4').style.border = "solid green";
+            }
+            document.querySelector('.next-word').style.display = "flex";
+            document.querySelector('#answer-1').disabled = true;
+            document.querySelector('#answer-2').disabled = true;
+            document.querySelector('#answer-3').disabled = true;
+            document.querySelector('#answer-4').disabled = true;
+        }
+        ShowNewWordToGuess();
+    </script>
+</div>
+{% endblock %}

@@ -107,6 +107,66 @@ def home():
     hiszp_def = str(rows[0][2])
     return render_template('home.html', pol_def=pol_def, hiszp_def=hiszp_def)
 
+@app.route('/modules')
+@login_required
+def modules():
+    connection_flashcard = sqlite3.connect("fiszki.db");
+    cursor_flashcard = connection_flashcard.cursor();
+    cursor_flashcard.execute("SELECT name FROM sqlite_master WHERE type='table';");
+    modules = cursor_flashcard.fetchall();
+    connection_flashcard.close()
+    return render_template('modules.html', modules=modules)
+
+@app.route('/modul-<table_name>')
+@login_required
+def modulePanel(table_name):
+    connection_flashcard = sqlite3.connect("fiszki.db")
+    cursor_flashcard = connection_flashcard.cursor()
+    cursor_flashcard.execute(f"SELECT * FROM {table_name} ORDER BY RANDOM();")
+    flashcards = cursor_flashcard.fetchall()
+    connection_flashcard.close()
+    return render_template('flashcards.html', table_name=table_name, flashcards=flashcards)
+
+@app.route('/<table_name>-quiz')
+@login_required
+def quiz(table_name):
+    connection_flashcard = sqlite3.connect("fiszki.db");
+    cursor_flashcard = connection_flashcard.cursor();
+    cursor_flashcard.execute(f"SELECT * FROM {table_name} ORDER BY RANDOM();");
+    flashcards = cursor_flashcard.fetchall();
+    connection_flashcard.close()
+    return render_template('quiz.html', table_name=table_name, flashcards=flashcards)
+
+@app.route('/<table_name>-writing')
+@login_required
+def writing(table_name):
+    connection_flashcard = sqlite3.connect("fiszki.db");
+    cursor_flashcard = connection_flashcard.cursor();
+    cursor_flashcard.execute(f"SELECT * FROM {table_name} ORDER BY RANDOM();");
+    flashcards = cursor_flashcard.fetchall();
+    connection_flashcard.close()
+    return render_template('writing.html', table_name=table_name, flashcards=flashcards)
+
+@app.route('/<table_name>-listening')
+@login_required
+def listening(table_name):
+    connection_flashcard = sqlite3.connect("fiszki.db");
+    cursor_flashcard = connection_flashcard.cursor();
+    cursor_flashcard.execute(f"SELECT * FROM {table_name} ORDER BY RANDOM();");
+    flashcards = cursor_flashcard.fetchall();
+    connection_flashcard.close()
+    return render_template('listening.html', table_name=table_name, flashcards=flashcards)
+
+@app.route('/<table_name>-speaking')
+@login_required
+def speaking(table_name):
+    connection_flashcard = sqlite3.connect("fiszki.db");
+    cursor_flashcard = connection_flashcard.cursor();
+    cursor_flashcard.execute(f"SELECT * FROM {table_name} ORDER BY RANDOM();");
+    flashcards = cursor_flashcard.fetchall();
+    connection_flashcard.close()
+    return render_template('speaking.html', table_name=table_name, flashcards=flashcards)
+
 @app.route('/logout')
 @login_required
 def logout():
