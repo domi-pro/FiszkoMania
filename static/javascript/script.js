@@ -14,6 +14,6 @@ function showOutline(){
     });
 }
 
-function DisplayFlashcardsFrom(table_name){
-    window.location.href = "/modul-" + table_name;
+function DisplayFlashcardsFrom(module_id){
+    window.location.href = "/module_id=" + module_id;
 }

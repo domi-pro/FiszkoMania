@@ -15,15 +15,19 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import uuid as uuid
 import os
+from sqlalchemy import func
 
 # App setup
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SECRET_KEY'] = 'many random bytes'
 UPLOAD_FOLDER = 'static/images'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# setting up users database
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///fiszkomania.db'
 db = SQLAlchemy(app)
+
 migrate = Migrate(app, db)
 
 login_manager = LoginManager()
@@ -35,14 +39,47 @@ login_manager.login_view = 'login'
 def load_user(user_id):
     return Users.query.get(int(user_id))
 
+# creating database models
 class Users(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(200), nullable=False, unique=True)
     password = db.Column(db.String(200), nullable=False, unique=True)
     date_added = db.Column(db.DateTime, default=datetime.utcnow)
     profile_picture = db.Column(db.String(), nullable=True)
+    progress = db.relationship('Progress', back_populates='user')
     def __repr__(self):
         return '<Name %r>' % self.username
+
+class Module(db.Model):
+    module_id = db.Column(db.Integer, primary_key=True)
+    module_name = db.Column(db.String(255), nullable=False, unique=True)
+    module_description = db.Column(db.String(255), nullable= True)
+
+    progress = db.relationship('Progress', back_populates='module')
+    flashcards = db.relationship('Flashcards', backref='module')
+    def __repr__(self):
+        return self.module_name
+
+class Flashcards(db.Model):
+    flashcard_id = db.Column(db.Integer, primary_key=True)
+    front = db.Column(db.String(200), nullable=False)
+    back = db.Column(db.String(200), nullable=False)
+    module_id = db.Column(db.Integer, db.ForeignKey('module.module_id'), nullable=False)
+    def __repr__(self):
+        return str(self.flashcard_id) + self.front + self.back
+
+class Progress(db.Model):
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    module_id = db.Column(db.Integer, db.ForeignKey('module.module_id'), primary_key=True)
+    flashcard_id = db.Column(db.Integer, db.ForeignKey('flashcards.flashcard_id'), primary_key=True)
+    
+    quiz = db.Column(db.Boolean, nullable=False)
+    listening = db.Column(db.Boolean, nullable=False)
+    speaking = db.Column(db.Boolean, nullable=False)
+    writing = db.Column(db.Boolean, nullable=False)
+
+    user = db.relationship('Users', back_populates='progress')
+    module = db.relationship('Module', back_populates='progress')
 
 with app.app_context():
     db.create_all()
@@ -110,62 +147,48 @@ def home():
 @app.route('/modules')
 @login_required
 def modules():
-    connection_flashcard = sqlite3.connect("fiszki.db");
-    cursor_flashcard = connection_flashcard.cursor();
-    cursor_flashcard.execute("SELECT name FROM sqlite_master WHERE type='table';");
-    modules = cursor_flashcard.fetchall();
-    connection_flashcard.close()
+    modules = db.session.query(Module.module_id, Module.module_name).all()
     return render_template('modules.html', modules=modules)
 
-@app.route('/modul-<table_name>')
+@app.route('/module_id=<id>')
 @login_required
-def modulePanel(table_name):
-    connection_flashcard = sqlite3.connect("fiszki.db")
-    cursor_flashcard = connection_flashcard.cursor()
-    cursor_flashcard.execute(f"SELECT * FROM {table_name} ORDER BY RANDOM();")
-    flashcards = cursor_flashcard.fetchall()
-    connection_flashcard.close()
-    return render_template('flashcards.html', table_name=table_name, flashcards=flashcards)
+def modulePanel(id):
+    flashcards = Flashcards.query.filter_by(module_id = id).order_by(func.random()).all()
+    moduleName = Module.query.filter_by(module_id = id).first()
+    flashcards_rows = [(flashcard.flashcard_id, flashcard.front, flashcard.back, flashcard.module_id) for flashcard in flashcards]
+    return render_template('flashcards.html', table_name=moduleName, flashcards=flashcards_rows, moduleID = id)
 
-@app.route('/<table_name>-quiz')
+@app.route('/module_id=<id>-quiz')
 @login_required
-def quiz(table_name):
-    connection_flashcard = sqlite3.connect("fiszki.db");
-    cursor_flashcard = connection_flashcard.cursor();
-    cursor_flashcard.execute(f"SELECT * FROM {table_name} ORDER BY RANDOM();");
-    flashcards = cursor_flashcard.fetchall();
-    connection_flashcard.close()
-    return render_template('quiz.html', table_name=table_name, flashcards=flashcards)
+def quiz(id):
+    flashcards = Flashcards.query.filter_by(module_id = id).order_by(func.random()).all()
+    moduleName = Module.query.filter_by(module_id = id).first()
+    flashcards_rows = [(flashcard.flashcard_id, flashcard.back, flashcard.front, flashcard.module_id) for flashcard in flashcards]
+    return render_template('quiz.html', table_name=moduleName, flashcards=flashcards_rows)
 
-@app.route('/<table_name>-writing')
+@app.route('/module_id=<id>-writing')
 @login_required
-def writing(table_name):
-    connection_flashcard = sqlite3.connect("fiszki.db");
-    cursor_flashcard = connection_flashcard.cursor();
-    cursor_flashcard.execute(f"SELECT * FROM {table_name} ORDER BY RANDOM();");
-    flashcards = cursor_flashcard.fetchall();
-    connection_flashcard.close()
-    return render_template('writing.html', table_name=table_name, flashcards=flashcards)
+def writing(id):
+    flashcards = Flashcards.query.filter_by(module_id = id).order_by(func.random()).all()
+    moduleName = Module.query.filter_by(module_id = id).first()
+    flashcards_rows = [(flashcard.flashcard_id, flashcard.back, flashcard.front, flashcard.module_id) for flashcard in flashcards]
+    return render_template('writing.html', table_name=moduleName, flashcards=flashcards_rows)
 
-@app.route('/<table_name>-listening')
+@app.route('/module_id=<id>-listening')
 @login_required
-def listening(table_name):
-    connection_flashcard = sqlite3.connect("fiszki.db");
-    cursor_flashcard = connection_flashcard.cursor();
-    cursor_flashcard.execute(f"SELECT * FROM {table_name} ORDER BY RANDOM();");
-    flashcards = cursor_flashcard.fetchall();
-    connection_flashcard.close()
-    return render_template('listening.html', table_name=table_name, flashcards=flashcards)
+def listening(id):
+    flashcards = Flashcards.query.filter_by(module_id = id).order_by(func.random()).all()
+    moduleName = Module.query.filter_by(module_id = id).first()
+    flashcards_rows = [(flashcard.flashcard_id, flashcard.back, flashcard.front, flashcard.module_id) for flashcard in flashcards]
+    return render_template('listening.html', table_name=moduleName, flashcards=flashcards_rows)
 
-@app.route('/<table_name>-speaking')
+@app.route('/module_id=<id>-speaking')
 @login_required
-def speaking(table_name):
-    connection_flashcard = sqlite3.connect("fiszki.db");
-    cursor_flashcard = connection_flashcard.cursor();
-    cursor_flashcard.execute(f"SELECT * FROM {table_name} ORDER BY RANDOM();");
-    flashcards = cursor_flashcard.fetchall();
-    connection_flashcard.close()
-    return render_template('speaking.html', table_name=table_name, flashcards=flashcards)
+def speaking(id):
+    flashcards = Flashcards.query.filter_by(module_id = id).order_by(func.random()).all()
+    moduleName = Module.query.filter_by(module_id = id).first()
+    flashcards_rows = [(flashcard.flashcard_id, flashcard.back, flashcard.front, flashcard.module_id) for flashcard in flashcards]
+    return render_template('speaking.html', table_name=moduleName, flashcards=flashcards_rows)
 
 @app.route('/logout')
 @login_required
