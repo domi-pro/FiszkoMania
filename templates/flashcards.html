@@ -28,12 +28,18 @@
                 </div>
                 <div><button onclick="PreviousFlashcard()"><ion-icon name="caret-back-outline"></ion-icon></button></ion-icon><button onclick="NextFlashcard()"><ion-icon name="caret-forward-outline"></ion-icon></button></div>
             </div>
+            {% if hide == False %}
+            <div>
+                <button onclick="location.href='/signup-to-course-{{moduleID}}'">Zapisz mnie</button>
+            </div>
+            {% else %}
             <div class="learning-options">
                 <a href="/module_id={{moduleID}}-quiz" class="activity-type">Quiz</a>
                 <a href="/module_id={{moduleID}}-writing" class="activity-type">Pisanie</a>
                 <a href="/module_id={{moduleID}}-listening" class="activity-type">Słuchanie</a>
                 <a href="/module_id={{moduleID}}-speaking" class="activity-type">Mówienie</a>
             </div>
+            {% endif %}
         </div>
     </div>
     <script src="{{url_for('static', filename='javascript/flashcard.js')}}"></script>

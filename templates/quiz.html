@@ -21,12 +21,17 @@
                 </div>
             </div>
             <div class="correct-answer"></div>
-            <button class="next-word" onclick="ShowNewWordToGuess()">Next ></button>
+            <button class="next-word" onclick="ShowNextWord()">Next ></button>
         </div>
     </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script>
         const flashcards_table = {{ flashcards | tojson }};
+        const flashcards_answers_table = {{ flashcards | tojson }};
+        console.log(flashcards_table);
         let correct_answer;
+        let correct_answer_index;
+        let correct_index;
         //document.addEventListener('keypress', CheckIfCorrect);
         function shuffle(array) {
             for (let i = array.length - 1; i > 0; i--) {
@@ -36,13 +41,13 @@
         }
 
         function ShowNewWordToGuess(){
-            const corrent_index = Math.floor(Math.random() * flashcards_table.length);
-            correct_answer = flashcards_table[corrent_index][2];
+            correct_index = Math.floor(Math.random() * flashcards_table.length);
+            correct_answer = flashcards_table[correct_index][2];
+            correct_answer_index = flashcards_table[correct_index][0];
             document.querySelector('.correct-answer').style.display = "none";
             document.querySelector('.correct-answer').textContent = "";
             document.querySelector('.next-word').style.display = "none";
-            document.querySelector('.word-card').textContent = flashcards_table[corrent_index][1];
-            console.log("dupa");
+            document.querySelector('.word-card').textContent = flashcards_table[correct_index][1];
             document.querySelector('#answer-1').style.borderStyle = "none";
             document.querySelector('#answer-2').style.borderStyle = "none";
             document.querySelector('#answer-3').style.borderStyle = "none";
@@ -53,28 +58,30 @@
             document.querySelector('#answer-4').disabled = false;
             const allAnswers = [];
             while (allAnswers.length < 3) {
-                const randomIncorrectIndex = Math.floor(Math.random() * flashcards_table.length);
-                const incorrectWord = flashcards_table[randomIncorrectIndex][2];
+                const randomIncorrectIndex = Math.floor(Math.random() * flashcards_answers_table.length);
+                const incorrectWord = flashcards_answers_table[randomIncorrectIndex][2];
                 if (incorrectWord !== correct_answer && !allAnswers.includes(incorrectWord)) {
                     allAnswers.push(incorrectWord);
                 }
             }
             allAnswers.push(correct_answer);
             shuffle(allAnswers);
-            console.log(allAnswers);
             document.querySelector('#answer-1').textContent = allAnswers[0];
             document.querySelector('#answer-2').textContent = allAnswers[1];
             document.querySelector('#answer-3').textContent = allAnswers[2];
             document.querySelector('#answer-4').textContent = allAnswers[3];
         }
         function CheckIfCorrect(index){
-            console.log(index);
             const selector = '#' + index;
             const selected_answer = document.querySelector(selector).textContent;
             if (selected_answer !== correct_answer){
                 document.querySelector(selector).style.border = "solid red";
                 document.querySelector('.correct-answer').style.display = "flex";
                 document.querySelector('.correct-answer').textContent = "Poprawna odpowiedź: " + correct_answer;
+            }
+            else {
+                flashcards_table.splice(correct_index, 1)
+                sendRequest();
             }
             if (document.querySelector('#answer-1').textContent === correct_answer){
                 document.querySelector('#answer-1').style.border = "solid green";
@@ -91,7 +98,30 @@
             document.querySelector('#answer-3').disabled = true;
             document.querySelector('#answer-4').disabled = true;
         }
-        ShowNewWordToGuess();
+        function sendRequest(){
+            $.ajax({
+                url: '/set-quiz-true-' + correct_answer_index,
+            })
+        }
+        function ShowNextWord(){
+            if(flashcards_table.length > 0){
+                ShowNewWordToGuess();
+            } else{
+                document.querySelector(".word-card").style.display = "none";
+                document.querySelector(".quiz-answers").style.display = "none";
+                document.querySelector(".flashcard-learn").innerHTML = "<button class='try-again-button' onclick='TryAgain()'>Sprobuj jeszcze raz</button>"
+            }
+        }
+        function TryAgain(){
+            window.location="/set-quiz-false-{{module_id}}";
+        }
+
+        if(flashcards_table.length > 0){
+            ShowNewWordToGuess();
+        } else{
+            TryAgain()
+        }
+                
     </script>
 </div>
 {% endblock %}

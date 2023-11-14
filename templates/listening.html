@@ -14,12 +14,15 @@
                 <input id="input-answer" type="text" focus></div>
             </div>
             <div class="correct-answer"></div>
-            <button class="next-word" onclick="ShowNewWordToGuess()">Next ></button>
+            <button class="next-word" onclick="ShowNextWord()">Next ></button>
         </div>
     </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script>
         const flashcards_table = {{ flashcards |tojson }};
         let answer;
+        let index;
+        let correct_index;
         document.addEventListener('keypress', CheckIfCorrect);
         function speakWord() {
             var utterance = new SpeechSynthesisUtterance();
@@ -28,7 +31,8 @@
             window.speechSynthesis.speak(utterance);
         }
         function ShowNewWordToGuess(){
-            const index = Math.floor(Math.random() * flashcards_table.length);
+            index = Math.floor(Math.random() * flashcards_table.length);
+            correct_index = flashcards_table[index][0];
             answer = flashcards_table[index][2];
             console.log(answer);
             document.querySelector('.correct-answer').style.display = "none";
@@ -45,6 +49,8 @@
                         const input = document.querySelector('#input-answer').value;
                         if( input === answer){
                             document.querySelector('#input-answer').style.color = 'green';
+                            flashcards_table.splice(index, 1);
+                            sendRequest();
                         } else {
                             document.querySelector('#input-answer').style.color = 'red';
                             document.querySelector('.correct-answer').style.display = "flex";
@@ -57,7 +63,29 @@
                     }
                 }
         }
-        ShowNewWordToGuess();
+        function sendRequest(){
+            $.ajax({
+                url: '/set-listening-true-' + correct_index,
+            })
+        }
+        function ShowNextWord(){
+            if(flashcards_table.length > 0){
+                ShowNewWordToGuess();
+            } else{
+                document.querySelector(".sound-card").style.display = "none";
+                document.querySelector(".answer-input").style.display = "none";
+                document.querySelector(".next-word").style.display = "none";
+                document.querySelector(".flashcard-learn").innerHTML = "<button class='try-again-button' onclick='TryAgain()'>Sprobuj jeszcze raz</button>"
+            }
+        }
+        function TryAgain(){
+            window.location="/set-listening-false-{{module_id}}";
+        }
+        if(flashcards_table.length > 0){
+            ShowNewWordToGuess();
+        } else{
+            TryAgain()
+        }
     </script>
 </div>
 {% endblock %}

@@ -7,19 +7,22 @@
 {% block body %}
 <div class="panel-background">
     <div class="flashcards-panel">
-        <h3 class="module-title">{{table_name}} - listening</h3>
+        <h3 class="module-title">{{table_name}} - speaking</h3>
         <div class="flashcard-learn">
             <div class="word-card"></div>
             <div class="user-answer">
                 <p id="spoken-text"></p><button class="microphone-button" onclick="startSpeakRecognition()"><ion-icon name="mic-outline"></ion-icon></button>
             </div>
             <div class="correct-answer"></div>
-            <button class="next-word" onclick="ShowNewWordToGuess()">Next ></button>
+            <button class="next-word" onclick="ShowNextWord()">Next ></button>
         </div>
     </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script>
         const flashcards_table = {{ flashcards | tojson }};
         let speaking_answer;
+        let correct_index;
+        let index;
         document.addEventListener('keypress', CheckIfCorrect);
         window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         const textField = document.querySelector('.answer-input')
@@ -27,7 +30,6 @@
         recognition.interimResults = false; // if true it gives us results while talking and if false gives result after we finish talking
         recognition.lang = "es-ES";
         recognition.addEventListener('result', (e)=> {
-            console.log("slucham");
             speaking_answer = e.results[0][0].transcript;
             document.querySelector('#spoken-text').textContent = speaking_answer;
             recognition.stop();
@@ -37,7 +39,8 @@
             recognition.start();
         }
         function ShowNewWordToGuess(){
-            const index = Math.floor(Math.random() * flashcards_table.length);
+            index = Math.floor(Math.random() * flashcards_table.length);
+            correct_index = flashcards_table[index][0];
             answer = flashcards_table[index][2];
             document.querySelector('.word-card').textContent = flashcards_table[index][1];
             document.querySelector('.correct-answer').style.display = "none";
@@ -54,6 +57,8 @@
                 if( input === answer){
                     console.log("good");
                     document.querySelector('#spoken-text').style.color = 'green';
+                    flashcards_table.splice(index, 1);
+                    sendRequest();
                 } else {
                     console.log("bad");
                     document.querySelector('#spoken-text').style.color = 'red';
@@ -64,7 +69,29 @@
                 document.querySelector('.microphone-button').disabled = true;
             }
         }
-        ShowNewWordToGuess();
+        function sendRequest(){
+            $.ajax({
+                url: '/set-speaking-true-' + correct_index,
+            })
+        }
+        function ShowNextWord(){
+            if(flashcards_table.length > 0){
+                ShowNewWordToGuess();
+            } else{
+                document.querySelector(".word-card").style.display = "none";
+                document.querySelector(".user-answer").style.display = "none";
+                document.querySelector(".next-word").style.display = "none";
+                document.querySelector(".flashcard-learn").innerHTML = "<button class='try-again-button' onclick='TryAgain()'>Sprobuj jeszcze raz</button>"
+            }
+        }
+        function TryAgain(){
+            window.location="/set-speaking-false-{{module_id}}";
+        }
+        if(flashcards_table.length > 0){
+            ShowNewWordToGuess();
+        } else{
+            TryAgain()
+        }
     </script>
 </div>
 {% endblock %}

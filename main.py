@@ -1,10 +1,3 @@
-### NOTATKI:
-
-## Kolejny krok to dodać zabezpieczenie wymagania zalogowania zeby przejsc do strony home i wyswietlac uzytkownika
-## Jest do tego biblioteka LoginManager ale wymaga to ode mnie operacji na obiekcie User i haszowaniu hasła
-## Dlatego muszę przerobić kod tak aby działał na obiekcie User to jego dodawał do bazy oraz posiadał haszowanie hasła
-## Potem kolejne kroki aby użyć LoginManagera 
-
 import sqlite3
 from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -73,24 +66,16 @@ class Progress(db.Model):
     module_id = db.Column(db.Integer, db.ForeignKey('module.module_id'), primary_key=True)
     flashcard_id = db.Column(db.Integer, db.ForeignKey('flashcards.flashcard_id'), primary_key=True)
     
-    quiz = db.Column(db.Boolean, nullable=False)
-    listening = db.Column(db.Boolean, nullable=False)
-    speaking = db.Column(db.Boolean, nullable=False)
-    writing = db.Column(db.Boolean, nullable=False)
+    quiz = db.Column(db.Boolean, nullable=False, default=False)
+    listening = db.Column(db.Boolean, nullable=False, default=False)
+    speaking = db.Column(db.Boolean, nullable=False, default=False)
+    writing = db.Column(db.Boolean, nullable=False, default=False)
 
     user = db.relationship('Users', back_populates='progress')
     module = db.relationship('Module', back_populates='progress')
 
 with app.app_context():
     db.create_all()
-
-# Connections to databases
-connection_flashcard = sqlite3.connect("fiszki.db");
-cursor_flashcard = connection_flashcard.cursor();
-cursor_flashcard.execute("SELECT * FROM Module_2");
-rows = cursor_flashcard.fetchall();
-first = rows[0];
-
 
 # Routes
 @app.route('/')
@@ -137,18 +122,28 @@ def signup():
 
     return render_template('signup.html')
 
-@app.route('/home')
-@login_required
-def home():
-    pol_def = str(rows[0][1])
-    hiszp_def = str(rows[0][2])
-    return render_template('home.html', pol_def=pol_def, hiszp_def=hiszp_def)
-
 @app.route('/modules')
 @login_required
 def modules():
     modules = db.session.query(Module.module_id, Module.module_name).all()
     return render_template('modules.html', modules=modules)
+
+@app.route('/signup-to-course-<id>')
+@login_required
+def addUserToCourse(id):
+    user = current_user
+    module = Module.query.get(id)
+    user_module_progress = Progress.query.filter_by(user=user, module=module).all()
+    if user_module_progress:
+        print("This user is already assigned to this module")
+    else:
+        flashcards = Flashcards.query.filter_by(module_id = id).all()
+        for flashcard in flashcards:
+            progress = Progress(user = user, module = module, flashcard_id = flashcard.flashcard_id)
+            db.session.add(progress)
+        db.session.commit()
+        print("Records added succesfully")
+    return redirect(url_for('modules'))
 
 @app.route('/module_id=<id>')
 @login_required
@@ -156,39 +151,140 @@ def modulePanel(id):
     flashcards = Flashcards.query.filter_by(module_id = id).order_by(func.random()).all()
     moduleName = Module.query.filter_by(module_id = id).first()
     flashcards_rows = [(flashcard.flashcard_id, flashcard.front, flashcard.back, flashcard.module_id) for flashcard in flashcards]
-    return render_template('flashcards.html', table_name=moduleName, flashcards=flashcards_rows, moduleID = id)
+    user_already_signed = Progress.query.filter_by(user=current_user, module=Module.query.get(id)).all()
+    if user_already_signed:
+        hide = True
+    else:
+        hide = False
+    return render_template('flashcards.html', table_name=moduleName, flashcards=flashcards_rows, moduleID = id, hide = hide)
 
 @app.route('/module_id=<id>-quiz')
 @login_required
 def quiz(id):
     flashcards = Flashcards.query.filter_by(module_id = id).order_by(func.random()).all()
+    flashcards_rows = []
     moduleName = Module.query.filter_by(module_id = id).first()
-    flashcards_rows = [(flashcard.flashcard_id, flashcard.back, flashcard.front, flashcard.module_id) for flashcard in flashcards]
-    return render_template('quiz.html', table_name=moduleName, flashcards=flashcards_rows)
+    for flashcard in flashcards:
+        flashcard_row = Progress.query.filter_by(user_id = current_user.id, flashcard_id = flashcard.flashcard_id).first()
+        do_i_get_it = flashcard_row.quiz
+        if do_i_get_it == False:
+            flashcards_rows.append((flashcard.flashcard_id, flashcard.back, flashcard.front, flashcard.module_id))
+    return render_template('quiz.html', table_name=moduleName, flashcards=flashcards_rows, module_id=id)
+
+@app.route('/set-quiz-true-<flashcard_id>')
+@login_required
+def setQuizTrue(flashcard_id):
+    progress = Progress.query.filter_by(user_id=current_user.id, flashcard_id=flashcard_id).first()
+    if progress:
+        progress.quiz = True
+        db.session.commit()
+    return "bla bla bla"
+
+@app.route('/set-quiz-false-<module_id>')
+@login_required
+def setQuizFalse(module_id):
+    progress = Progress.query.filter_by(user_id=current_user.id, module_id=module_id).all()
+    for row in progress:
+        row.quiz = False
+        db.session.commit()
+    return redirect(url_for('quiz', id=module_id))
+
 
 @app.route('/module_id=<id>-writing')
 @login_required
 def writing(id):
     flashcards = Flashcards.query.filter_by(module_id = id).order_by(func.random()).all()
+    flashcards_rows = []
     moduleName = Module.query.filter_by(module_id = id).first()
-    flashcards_rows = [(flashcard.flashcard_id, flashcard.back, flashcard.front, flashcard.module_id) for flashcard in flashcards]
-    return render_template('writing.html', table_name=moduleName, flashcards=flashcards_rows)
+    for flashcard in flashcards:
+        flashcard_row = Progress.query.filter_by(user_id = current_user.id, flashcard_id = flashcard.flashcard_id).first()
+        do_i_get_it = flashcard_row.writing
+        if do_i_get_it == False:
+            flashcards_rows.append((flashcard.flashcard_id, flashcard.back, flashcard.front, flashcard.module_id))
+    return render_template('writing.html', table_name=moduleName, flashcards=flashcards_rows, module_id=id)
+
+@app.route('/set-writing-true-<flashcard_id>')
+@login_required
+def setWritingTrue(flashcard_id):
+    user = current_user
+    progress = Progress.query.filter_by(user_id=current_user.id, flashcard_id=flashcard_id).first()
+    if progress:
+        progress.writing = True
+        db.session.commit()
+    return "bla bla bla"
+
+@app.route('/set-writing-false-<module_id>')
+@login_required
+def setWritingFalse(module_id):
+    progress = Progress.query.filter_by(user_id=current_user.id, module_id=module_id).all()
+    for row in progress:
+        row.writing = False
+        db.session.commit()
+    return redirect(url_for('writing', id=module_id))
 
 @app.route('/module_id=<id>-listening')
 @login_required
 def listening(id):
     flashcards = Flashcards.query.filter_by(module_id = id).order_by(func.random()).all()
+    flashcards_rows = []
     moduleName = Module.query.filter_by(module_id = id).first()
-    flashcards_rows = [(flashcard.flashcard_id, flashcard.back, flashcard.front, flashcard.module_id) for flashcard in flashcards]
-    return render_template('listening.html', table_name=moduleName, flashcards=flashcards_rows)
+    for flashcard in flashcards:
+        flashcard_row = Progress.query.filter_by(user_id = current_user.id, flashcard_id = flashcard.flashcard_id).first()
+        do_i_get_it = flashcard_row.listening
+        if do_i_get_it == False:
+            flashcards_rows.append((flashcard.flashcard_id, flashcard.back, flashcard.front, flashcard.module_id))
+    return render_template('listening.html', table_name=moduleName, flashcards=flashcards_rows, module_id=id)
+
+@app.route('/set-listening-true-<flashcard_id>')
+@login_required
+def setListeningTrue(flashcard_id):
+    user = current_user
+    progress = Progress.query.filter_by(user_id=current_user.id, flashcard_id=flashcard_id).first()
+    if progress:
+        progress.listening = True
+        db.session.commit()
+    return "bla bla bla"
+
+@app.route('/set-listening-false-<module_id>')
+@login_required
+def setListeningFalse(module_id):
+    progress = Progress.query.filter_by(user_id=current_user.id, module_id=module_id).all()
+    for row in progress:
+        row.listening = False
+        db.session.commit()
+    return redirect(url_for('listening', id=module_id))
 
 @app.route('/module_id=<id>-speaking')
 @login_required
 def speaking(id):
     flashcards = Flashcards.query.filter_by(module_id = id).order_by(func.random()).all()
+    flashcards_rows = []
     moduleName = Module.query.filter_by(module_id = id).first()
-    flashcards_rows = [(flashcard.flashcard_id, flashcard.back, flashcard.front, flashcard.module_id) for flashcard in flashcards]
-    return render_template('speaking.html', table_name=moduleName, flashcards=flashcards_rows)
+    for flashcard in flashcards:
+        flashcard_row = Progress.query.filter_by(user_id = current_user.id, flashcard_id = flashcard.flashcard_id).first()
+        do_i_get_it = flashcard_row.speaking
+        if do_i_get_it == False:
+            flashcards_rows.append((flashcard.flashcard_id, flashcard.back, flashcard.front, flashcard.module_id))
+    return render_template('speaking.html', table_name=moduleName, flashcards=flashcards_rows, module_id=id)
+
+@app.route('/set-speaking-true-<flashcard_id>')
+@login_required
+def setSpeakingTrue(flashcard_id):
+    user = current_user
+    progress = Progress.query.filter_by(user_id=current_user.id, flashcard_id=flashcard_id).first()
+    if progress:
+        progress.speaking = True
+        db.session.commit()
+    return "bla bla bla"
+
+@app.route('/set-speaking-false-<module_id>')
+@login_required
+def setSpeakingFalse(module_id):
+    progress = Progress.query.filter_by(user_id=current_user.id, module_id=module_id).all()
+    for row in progress:
+        row.speaking = False
+        db.session.commit()
+    return redirect(url_for('speaking', id=module_id))
 
 @app.route('/logout')
 @login_required
