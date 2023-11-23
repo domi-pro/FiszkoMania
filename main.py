@@ -1,10 +1,3 @@
-### NOTATKI:
-
-## Kolejny krok to dodać zabezpieczenie wymagania zalogowania zeby przejsc do strony home i wyswietlac uzytkownika
-## Jest do tego biblioteka LoginManager ale wymaga to ode mnie operacji na obiekcie User i haszowaniu hasła
-## Dlatego muszę przerobić kod tak aby działał na obiekcie User to jego dodawał do bazy oraz posiadał haszowanie hasła
-## Potem kolejne kroki aby użyć LoginManagera 
-
 import sqlite3
 from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -15,15 +8,19 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import uuid as uuid
 import os
+from sqlalchemy import func
 
 # App setup
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SECRET_KEY'] = 'many random bytes'
 UPLOAD_FOLDER = 'static/images'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# setting up users database
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///fiszkomania.db'
 db = SQLAlchemy(app)
+
 migrate = Migrate(app, db)
 
 login_manager = LoginManager()
@@ -35,30 +32,58 @@ login_manager.login_view = 'login'
 def load_user(user_id):
     return Users.query.get(int(user_id))
 
+# creating database models
 class Users(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(200), nullable=False, unique=True)
     password = db.Column(db.String(200), nullable=False, unique=True)
     date_added = db.Column(db.DateTime, default=datetime.utcnow)
     profile_picture = db.Column(db.String(), nullable=True)
+    progress = db.relationship('Progress', back_populates='user')
     def __repr__(self):
         return '<Name %r>' % self.username
+
+class Module(db.Model):
+    module_id = db.Column(db.Integer, primary_key=True)
+    module_name = db.Column(db.String(255), nullable=False, unique=True)
+    module_description = db.Column(db.String(255), nullable= True)
+
+    progress = db.relationship('Progress', back_populates='module')
+    flashcards = db.relationship('Flashcards', backref='module')
+    def __repr__(self):
+        return self.module_name
+
+class Flashcards(db.Model):
+    flashcard_id = db.Column(db.Integer, primary_key=True)
+    front = db.Column(db.String(200), nullable=False)
+    back = db.Column(db.String(200), nullable=False)
+    module_id = db.Column(db.Integer, db.ForeignKey('module.module_id'), nullable=False)
+    def __repr__(self):
+        return str(self.flashcard_id) + self.front + self.back
+
+class Progress(db.Model):
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    module_id = db.Column(db.Integer, db.ForeignKey('module.module_id'), primary_key=True)
+    flashcard_id = db.Column(db.Integer, db.ForeignKey('flashcards.flashcard_id'), primary_key=True)
+    
+    quiz = db.Column(db.Boolean, nullable=False, default=False)
+    listening = db.Column(db.Boolean, nullable=False, default=False)
+    speaking = db.Column(db.Boolean, nullable=False, default=False)
+    writing = db.Column(db.Boolean, nullable=False, default=False)
+
+    user = db.relationship('Users', back_populates='progress')
+    module = db.relationship('Module', back_populates='progress')
 
 with app.app_context():
     db.create_all()
 
-# Connections to databases
-connection_flashcard = sqlite3.connect("fiszki.db");
-cursor_flashcard = connection_flashcard.cursor();
-cursor_flashcard.execute("SELECT * FROM Module_2");
-rows = cursor_flashcard.fetchall();
-first = rows[0];
-
-
 # Routes
 @app.route('/')
 def index():
-    return render_template('index.html');
+    bool = 0
+    if current_user.is_authenticated:
+        bool = 1
+    return render_template('index.html', bool=bool)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -85,6 +110,7 @@ def signup():
         
         username = request.form['username']
         password = request.form['password']
+        password_repeat = request.form['password_repeat']
 
         user = Users.query.filter_by(username=username).first()
 
@@ -92,80 +118,181 @@ def signup():
             flash("Użytkownik o takiej nazwie już istnieje. Spróbuj ponownie")
             return redirect(url_for('signup'))
         
-        new_user = Users(username=username, password=generate_password_hash(password, method='sha256'))
+        if username=="":
+            flash("Nazwa użytkownika nie może być pusta")
+            return redirect(url_for('signup'))
 
-        db.session.add(new_user)
-        db.session.commit()
-        return redirect(url_for('login'))
-
+        if password==password_repeat:
+            new_user = Users(username=username, password=generate_password_hash(password, method='sha256'), profile_picture="default/person-outline.jpg")
+            db.session.add(new_user)
+            db.session.commit()
+            login_user(new_user)
+            return redirect(url_for('dashboard'))
+        else:
+            flash("Hasła nie są identyczne. Spróbuj ponownie")
+            return redirect(url_for('signup'))
     return render_template('signup.html')
-
-@app.route('/home')
-@login_required
-def home():
-    pol_def = str(rows[0][1])
-    hiszp_def = str(rows[0][2])
-    return render_template('home.html', pol_def=pol_def, hiszp_def=hiszp_def)
 
 @app.route('/modules')
 @login_required
 def modules():
-    connection_flashcard = sqlite3.connect("fiszki.db");
-    cursor_flashcard = connection_flashcard.cursor();
-    cursor_flashcard.execute("SELECT name FROM sqlite_master WHERE type='table';");
-    modules = cursor_flashcard.fetchall();
-    connection_flashcard.close()
+    modules = db.session.query(Module.module_id, Module.module_name, Module.module_description).all()
     return render_template('modules.html', modules=modules)
 
-@app.route('/modul-<table_name>')
+@app.route('/signup-to-course-<id>')
 @login_required
-def modulePanel(table_name):
-    connection_flashcard = sqlite3.connect("fiszki.db")
-    cursor_flashcard = connection_flashcard.cursor()
-    cursor_flashcard.execute(f"SELECT * FROM {table_name} ORDER BY RANDOM();")
-    flashcards = cursor_flashcard.fetchall()
-    connection_flashcard.close()
-    return render_template('flashcards.html', table_name=table_name, flashcards=flashcards)
+def addUserToCourse(id):
+    user = current_user
+    module = Module.query.get(id)
+    user_module_progress = Progress.query.filter_by(user=user, module=module).all()
+    if len(user_module_progress) == 0:
+        flashcards = Flashcards.query.filter_by(module_id = id).all()
+        for flashcard in flashcards:
+            progress = Progress(user = user, module = module, flashcard_id = flashcard.flashcard_id)
+            db.session.add(progress)
+        db.session.commit()
+    return redirect(url_for('modulePanel', id=id))
 
-@app.route('/<table_name>-quiz')
+@app.route('/module_id=<id>')
 @login_required
-def quiz(table_name):
-    connection_flashcard = sqlite3.connect("fiszki.db");
-    cursor_flashcard = connection_flashcard.cursor();
-    cursor_flashcard.execute(f"SELECT * FROM {table_name} ORDER BY RANDOM();");
-    flashcards = cursor_flashcard.fetchall();
-    connection_flashcard.close()
-    return render_template('quiz.html', table_name=table_name, flashcards=flashcards)
+def modulePanel(id):
+    flashcards = Flashcards.query.filter_by(module_id = id).order_by(func.random()).all()
+    moduleName = Module.query.filter_by(module_id = id).first()
+    flashcards_rows = [(flashcard.flashcard_id, flashcard.front, flashcard.back, flashcard.module_id) for flashcard in flashcards]
+    user_already_signed = Progress.query.filter_by(user=current_user, module=Module.query.get(id)).all()
+    if user_already_signed:
+        hide = True
+    else:
+        hide = False
+    return render_template('flashcards.html', table_name=moduleName, flashcards=flashcards_rows, moduleID = id, hide = hide)
 
-@app.route('/<table_name>-writing')
+@app.route('/module_id=<id>-quiz')
 @login_required
-def writing(table_name):
-    connection_flashcard = sqlite3.connect("fiszki.db");
-    cursor_flashcard = connection_flashcard.cursor();
-    cursor_flashcard.execute(f"SELECT * FROM {table_name} ORDER BY RANDOM();");
-    flashcards = cursor_flashcard.fetchall();
-    connection_flashcard.close()
-    return render_template('writing.html', table_name=table_name, flashcards=flashcards)
+def quiz(id):
+    flashcards = Flashcards.query.filter_by(module_id = id).order_by(func.random()).all()
+    flashcards_rows = []
+    moduleName = Module.query.filter_by(module_id = id).first()
+    for flashcard in flashcards:
+        flashcard_row = Progress.query.filter_by(user_id = current_user.id, flashcard_id = flashcard.flashcard_id).first()
+        do_i_get_it = flashcard_row.quiz
+        if do_i_get_it == False:
+            flashcards_rows.append((flashcard.flashcard_id, flashcard.back, flashcard.front, flashcard.module_id))
+    return render_template('quiz.html', table_name=moduleName, flashcards=flashcards_rows, module_id=id)
 
-@app.route('/<table_name>-listening')
+@app.route('/set-quiz-true-<flashcard_id>')
 @login_required
-def listening(table_name):
-    connection_flashcard = sqlite3.connect("fiszki.db");
-    cursor_flashcard = connection_flashcard.cursor();
-    cursor_flashcard.execute(f"SELECT * FROM {table_name} ORDER BY RANDOM();");
-    flashcards = cursor_flashcard.fetchall();
-    connection_flashcard.close()
-    return render_template('listening.html', table_name=table_name, flashcards=flashcards)
+def setQuizTrue(flashcard_id):
+    progress = Progress.query.filter_by(user_id=current_user.id, flashcard_id=flashcard_id).first()
+    if progress:
+        progress.quiz = True
+        db.session.commit()
+    return "bla bla bla"
 
-@app.route('/<table_name>-speaking')
+@app.route('/set-quiz-false-<module_id>')
 @login_required
-def speaking(table_name):
-    connection_flashcard = sqlite3.connect("fiszki.db");
-    cursor_flashcard = connection_flashcard.cursor();
-    cursor_flashcard.execute(f"SELECT * FROM {table_name} ORDER BY RANDOM();");
-    flashcards = cursor_flashcard.fetchall();
-    connection_flashcard.close()
-    return render_template('speaking.html', table_name=table_name, flashcards=flashcards)
+def setQuizFalse(module_id):
+    progress = Progress.query.filter_by(user_id=current_user.id, module_id=module_id).all()
+    for row in progress:
+        row.quiz = False
+        db.session.commit()
+    return redirect(url_for('quiz', id=module_id))
+
+
+@app.route('/module_id=<id>-writing')
+@login_required
+def writing(id):
+    flashcards = Flashcards.query.filter_by(module_id = id).order_by(func.random()).all()
+    flashcards_rows = []
+    moduleName = Module.query.filter_by(module_id = id).first()
+    for flashcard in flashcards:
+        flashcard_row = Progress.query.filter_by(user_id = current_user.id, flashcard_id = flashcard.flashcard_id).first()
+        do_i_get_it = flashcard_row.writing
+        if do_i_get_it == False:
+            flashcards_rows.append((flashcard.flashcard_id, flashcard.back, flashcard.front, flashcard.module_id))
+    return render_template('writing.html', table_name=moduleName, flashcards=flashcards_rows, module_id=id)
+
+@app.route('/set-writing-true-<flashcard_id>')
+@login_required
+def setWritingTrue(flashcard_id):
+    user = current_user
+    progress = Progress.query.filter_by(user_id=current_user.id, flashcard_id=flashcard_id).first()
+    if progress:
+        progress.writing = True
+        db.session.commit()
+    return "bla bla bla"
+
+@app.route('/set-writing-false-<module_id>')
+@login_required
+def setWritingFalse(module_id):
+    progress = Progress.query.filter_by(user_id=current_user.id, module_id=module_id).all()
+    for row in progress:
+        row.writing = False
+        db.session.commit()
+    return redirect(url_for('writing', id=module_id))
+
+@app.route('/module_id=<id>-listening')
+@login_required
+def listening(id):
+    flashcards = Flashcards.query.filter_by(module_id = id).order_by(func.random()).all()
+    flashcards_rows = []
+    moduleName = Module.query.filter_by(module_id = id).first()
+    for flashcard in flashcards:
+        flashcard_row = Progress.query.filter_by(user_id = current_user.id, flashcard_id = flashcard.flashcard_id).first()
+        do_i_get_it = flashcard_row.listening
+        if do_i_get_it == False:
+            flashcards_rows.append((flashcard.flashcard_id, flashcard.back, flashcard.front, flashcard.module_id))
+    return render_template('listening.html', table_name=moduleName, flashcards=flashcards_rows, module_id=id)
+
+@app.route('/set-listening-true-<flashcard_id>')
+@login_required
+def setListeningTrue(flashcard_id):
+    user = current_user
+    progress = Progress.query.filter_by(user_id=current_user.id, flashcard_id=flashcard_id).first()
+    if progress:
+        progress.listening = True
+        db.session.commit()
+    return "bla bla bla"
+
+@app.route('/set-listening-false-<module_id>')
+@login_required
+def setListeningFalse(module_id):
+    progress = Progress.query.filter_by(user_id=current_user.id, module_id=module_id).all()
+    for row in progress:
+        row.listening = False
+        db.session.commit()
+    return redirect(url_for('listening', id=module_id))
+
+@app.route('/module_id=<id>-speaking')
+@login_required
+def speaking(id):
+    flashcards = Flashcards.query.filter_by(module_id = id).order_by(func.random()).all()
+    flashcards_rows = []
+    moduleName = Module.query.filter_by(module_id = id).first()
+    for flashcard in flashcards:
+        flashcard_row = Progress.query.filter_by(user_id = current_user.id, flashcard_id = flashcard.flashcard_id).first()
+        do_i_get_it = flashcard_row.speaking
+        if do_i_get_it == False:
+            flashcards_rows.append((flashcard.flashcard_id, flashcard.back, flashcard.front, flashcard.module_id))
+    return render_template('speaking.html', table_name=moduleName, flashcards=flashcards_rows, module_id=id)
+
+@app.route('/set-speaking-true-<flashcard_id>')
+@login_required
+def setSpeakingTrue(flashcard_id):
+    user = current_user
+    progress = Progress.query.filter_by(user_id=current_user.id, flashcard_id=flashcard_id).first()
+    if progress:
+        progress.speaking = True
+        db.session.commit()
+    return "bla bla bla"
+
+@app.route('/set-speaking-false-<module_id>')
+@login_required
+def setSpeakingFalse(module_id):
+    progress = Progress.query.filter_by(user_id=current_user.id, module_id=module_id).all()
+    for row in progress:
+        row.speaking = False
+        db.session.commit()
+    return redirect(url_for('speaking', id=module_id))
 
 @app.route('/logout')
 @login_required
@@ -177,7 +304,26 @@ def logout():
 @login_required
 def dashboard():
     image_files = [f for f in os.listdir('static/images/default') if f.endswith(('jpg', 'png', 'gif'))]
-    return render_template('dashboard.html', image_files=image_files)
+    courses_ids = Progress.query.filter_by(user_id=current_user.id).with_entities(Progress.module_id).distinct().all()
+    courses = []
+    for id in courses_ids:
+        module = Module.query.filter_by(module_id=id[0]).first()
+        if module:
+            flashcards_from_module = Progress.query.filter_by(user_id=current_user.id, module_id=id[0]).all()
+            divisor = len(flashcards_from_module)*4
+            dividend = 0
+            for flashcard in flashcards_from_module:
+                if flashcard.quiz == 1:
+                    dividend += 1
+                if flashcard.writing == 1:
+                    dividend += 1
+                if flashcard.listening == 1:
+                    dividend += 1
+                if flashcard.speaking == 1:
+                    dividend += 1
+            progress = int(dividend/divisor * 100)
+            courses.append([module.module_id, module.module_name, progress])
+    return render_template('dashboard.html', image_files=image_files, courses=courses)
 
 @app.route('/add-avatar', methods=['GET', 'POST'])
 @login_required
@@ -197,7 +343,7 @@ def add_avatar():
             user_update = Users.query.get_or_404(current_user.id)
             user_update.profile_picture = profile_picture  
         db.session.commit()
-    return render_template('dashboard.html', image_files=image_files)
+    return redirect(url_for('dashboard'))
 
 @app.route('/change-password', methods=['GET', 'POST'])
 @login_required
@@ -225,6 +371,23 @@ def changePassword():
             return redirect(url_for('changePassword'))
         
     return render_template('change_password.html')
+
+@app.route('/about-me')
+def aboutme():
+    return render_template('about_me.html')
+
+@app.route('/leave-course-<module_id>', methods=['GET', 'POST'])
+def leaveCourse(module_id):
+    if request.method == 'POST':
+        try:
+            db.session.query(Progress).filter_by(user_id=current_user.id, module_id=module_id).delete()
+            db.session.commit()
+            return redirect(url_for('modulePanel', id=module_id))
+        except Exception as e:
+            db.session.rollback()
+            flash("Niestety coś poszło nie tak")
+            return redirect(url_for('modulePanel', id=module_id))
+
 
 if __name__ == "__main__":
     app.run(debug=True)

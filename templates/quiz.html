@@ -1,13 +1,28 @@
 {% extends 'base.html' %}
 
 {% block head %}
-<title>Quiz</title>
+<title>Quiz - {{table_name}}</title>
 {% endblock %}
 
 {% block body %}
+<div class="popup-background">
+    <div class="settings-popup">
+        <div class="settings-close"><button onclick="closeOptions()"><ion-icon name="close-outline"></ion-icon></button></div>
+        <p>Ustawienia</p>
+        <div class="question-language" method="POST">
+            <div><input type="radio" name="lang-opt" id="hiszp"><label for="hiszp">Pyt: hiszpański Odp: polski</label></div>
+            <div><input type="radio" name="lang-opt" id="pol" checked><label for="pol">Pytanie: polski Odp: hiszpański</label></div>
+            <button onclick="changeLangOption()">Zapisz wybór</button>
+        </div>
+    </div>
+</div>
 <div class="panel-background">
     <div class="flashcards-panel">
-        <h3 class="module-title">{{table_name}} - quiz</h3>
+        <div class="back-to-menu">
+            <a href="/module_id={{module_id}}" class="back-button"><ion-icon name="chevron-back-circle-outline"></ion-icon></a>
+            <h4 class="module-title-2">{{table_name}} - quiz</h4>
+            <button onClick="showOptions()"><ion-icon name="settings-outline"></ion-icon></button>
+        </div>
         <div class="flashcard-learn">
             <div class="word-card"></div>
             <div class="quiz-answers">
@@ -21,13 +36,18 @@
                 </div>
             </div>
             <div class="correct-answer"></div>
-            <button class="next-word" onclick="ShowNewWordToGuess()">Next ></button>
+            <button class="next-word" onclick="ShowNextWord()">Next ></button>
         </div>
     </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script>
         const flashcards_table = {{ flashcards | tojson }};
+        const flashcards_answers_table = {{ flashcards | tojson }};
         let correct_answer;
-        //document.addEventListener('keypress', CheckIfCorrect);
+        let correct_answer_index;
+        let correct_index;
+        let front = 1;
+        let back = 2;
         function shuffle(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -36,13 +56,13 @@
         }
 
         function ShowNewWordToGuess(){
-            const corrent_index = Math.floor(Math.random() * flashcards_table.length);
-            correct_answer = flashcards_table[corrent_index][2];
+            correct_index = Math.floor(Math.random() * flashcards_table.length);
+            correct_answer = flashcards_table[correct_index][back];
+            correct_answer_index = flashcards_table[correct_index][0];
             document.querySelector('.correct-answer').style.display = "none";
             document.querySelector('.correct-answer').textContent = "";
             document.querySelector('.next-word').style.display = "none";
-            document.querySelector('.word-card').textContent = flashcards_table[corrent_index][1];
-            console.log("dupa");
+            document.querySelector('.word-card').textContent = flashcards_table[correct_index][front];
             document.querySelector('#answer-1').style.borderStyle = "none";
             document.querySelector('#answer-2').style.borderStyle = "none";
             document.querySelector('#answer-3').style.borderStyle = "none";
@@ -53,28 +73,30 @@
             document.querySelector('#answer-4').disabled = false;
             const allAnswers = [];
             while (allAnswers.length < 3) {
-                const randomIncorrectIndex = Math.floor(Math.random() * flashcards_table.length);
-                const incorrectWord = flashcards_table[randomIncorrectIndex][2];
+                const randomIncorrectIndex = Math.floor(Math.random() * flashcards_answers_table.length);
+                const incorrectWord = flashcards_answers_table[randomIncorrectIndex][back];
                 if (incorrectWord !== correct_answer && !allAnswers.includes(incorrectWord)) {
                     allAnswers.push(incorrectWord);
                 }
             }
             allAnswers.push(correct_answer);
             shuffle(allAnswers);
-            console.log(allAnswers);
             document.querySelector('#answer-1').textContent = allAnswers[0];
             document.querySelector('#answer-2').textContent = allAnswers[1];
             document.querySelector('#answer-3').textContent = allAnswers[2];
             document.querySelector('#answer-4').textContent = allAnswers[3];
         }
         function CheckIfCorrect(index){
-            console.log(index);
             const selector = '#' + index;
             const selected_answer = document.querySelector(selector).textContent;
             if (selected_answer !== correct_answer){
                 document.querySelector(selector).style.border = "solid red";
                 document.querySelector('.correct-answer').style.display = "flex";
                 document.querySelector('.correct-answer').textContent = "Poprawna odpowiedź: " + correct_answer;
+            }
+            else {
+                flashcards_table.splice(correct_index, 1)
+                sendRequest();
             }
             if (document.querySelector('#answer-1').textContent === correct_answer){
                 document.querySelector('#answer-1').style.border = "solid green";
@@ -91,7 +113,55 @@
             document.querySelector('#answer-3').disabled = true;
             document.querySelector('#answer-4').disabled = true;
         }
-        ShowNewWordToGuess();
+        function sendRequest(){
+            $.ajax({
+                url: '/set-quiz-true-' + correct_answer_index,
+            })
+        }
+        function ShowNextWord(){
+            if(flashcards_table.length > 0){
+                ShowNewWordToGuess();
+            } else{
+                document.querySelector(".word-card").style.display = "none";
+                document.querySelector(".quiz-answers").style.display = "none";
+                document.querySelector(".flashcard-learn").innerHTML = "<button class='try-again-button' onclick='TryAgain()'>Sprobuj jeszcze raz</button>"
+            }
+        }
+        function TryAgain(){
+            window.location="/set-quiz-false-{{module_id}}";
+        }
+
+        function showOptions() {
+            document.querySelector(".popup-background").style.display = "flex";
+        }
+
+        function closeOptions() {
+            document.querySelector(".popup-background").style.display = "none";
+        }
+
+        function changeLangOption(){
+            var hiszp = document.querySelector("#hiszp")
+            var pol = document.querySelector("#pol")
+            if(hiszp.checked){
+                front = 2;
+                back = 1;
+                ShowNewWordToGuess();
+                document.querySelector(".popup-background").style.display = "none";
+            }
+            else if(pol.checked){
+                front = 1;
+                back = 2;
+                ShowNewWordToGuess();
+                document.querySelector(".popup-background").style.display = "none";
+            }
+        }
+
+        if(flashcards_table.length > 0){
+            ShowNewWordToGuess();
+        } else{
+            TryAgain()
+        }
+                
     </script>
 </div>
 {% endblock %}

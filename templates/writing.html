@@ -1,29 +1,79 @@
 {% extends 'base.html' %}
 
 {% block head %}
-<title>Quiz</title>
+<title>Pisanie - {{table_name}}</title>
 {% endblock %}
 
 {% block body %}
-<div class="panel-background">
-    <div class="flashcards-panel">
-        <h3 class="module-title">{{table_name}} - writing</h3>
-        <div class="flashcard-learn">
-            <div class="word-card"></div>
-            <div class="answer-input">
-                <input id="input-answer" type="text" focus></div>
-            </div>
-            <div class="correct-answer"></div>
-            <button class="next-word" onclick="ShowNewWordToGuess()">Next ></button>
+<div class="popup-background">
+    <div class="settings-popup">
+        <div class="settings-close"><button onclick="closeOptions()"><ion-icon name="close-outline"></ion-icon></button></div>
+        <p>Ustawienia</p>
+        <div class="question-language" method="POST">
+            <div><input type="radio" name="lang-opt" id="hiszp"><label for="hiszp">Pyt: hiszpański Odp: polski</label></div>
+            <div><input type="radio" name="lang-opt" id="pol" checked><label for="pol">Pyt: polski Odp: hiszpański</label></div>
+            <button onclick="changeLangOption()">Zapisz wybór</button>
         </div>
     </div>
+</div>
+<div class="panel-background">
+    <div class="flashcards-panel">
+        <div class="back-to-menu">
+            <a href="/module_id={{module_id}}" class="back-button"><ion-icon name="chevron-back-circle-outline"></ion-icon></a>
+            <h4 class="module-title-2">{{table_name}} - writing</h4>
+            <button onClick="showOptions()"><ion-icon name="settings-outline"></ion-icon></button>
+        </div>
+        <div class="flashcard-learn">
+            <div class="word-card"></div>
+            <div class="keyboard">
+                <button onclick="ShowKeyboard()">
+                    <img src="static/images/keyboard-solid.svg" width="10%">
+                    <ion-icon id="caret-down" name="caret-down-outline"></ion-icon>
+                    <ion-icon id="caret-up" class="caret-up" name="caret-up-outline"></ion-icon>
+                </button>
+                <div id="keys" class="keys">
+                    <div class="keys-row">
+                        <button class="key-button" id="0" onclick="enterButton(this.id)">á</button>
+                        <button class="key-button" id="1" onclick="enterButton(this.id)">é</button>
+                        <button class="key-button" id="2" onclick="enterButton(this.id)">í</button>
+                        <button class="key-button" id="3" onclick="enterButton(this.id)">ó</button>
+                        <button class="key-button" id="4" onclick="enterButton(this.id)">ú</button>
+                        <button class="key-button" id="5" onclick="enterButton(this.id)">ü</button>
+                        <button class="key-button" id="6" onclick="enterButton(this.id)">ñ</button>
+                        <button class="key-button" id="7" onclick="enterButton(this.id)">¿</button>
+                    </div>
+                    <div class="keys-row">
+                        <button class="key-button" id="8" onclick="enterButton(this.id)">Á</button>
+                        <button class="key-button" id="9" onclick="enterButton(this.id)">É</button>
+                        <button class="key-button" id="10" onclick="enterButton(this.id)">Í</button>
+                        <button class="key-button" id="11" onclick="enterButton(this.id)">Ó</button>
+                        <button class="key-button" id="12" onclick="enterButton(this.id)">Ú</button>
+                        <button class="key-button" id="13" onclick="enterButton(this.id)">Ü</button>
+                        <button class="key-button" id="14" onclick="enterButton(this.id)">Ñ</button>
+                        <button class="key-button" id="15" onclick="enterButton(this.id)">¡</button>
+                    </div>
+                </div>
+            </div>
+            <div class="answer-input">
+                <input id="input-answer" type="text" focus autocomplete="off"></div>
+            </div>
+            <div class="correct-answer"></div>
+            <button class="next-word" onclick="ShowNextWord()">Next ></button>
+        </div>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script>
         const flashcards_table = {{ flashcards |tojson }};
         let answer;
+        let index;
+        let correct_index;
+        let front = 1;
+        let back = 2;
         document.addEventListener('keypress', CheckIfCorrect);
         function ShowNewWordToGuess(){
-            const index = Math.floor(Math.random() * flashcards_table.length);
-            answer = flashcards_table[index][2];
+            index = Math.floor(Math.random() * flashcards_table.length);
+            correct_index = flashcards_table[index][0];
+            answer = flashcards_table[index][back];
             document.querySelector('.correct-answer').style.display = "none";
             document.querySelector('.correct-answer').textContent = "";
             document.querySelector('.next-word').style.display = "none";
@@ -31,14 +81,16 @@
             document.querySelector('#input-answer').style.color = "black";
             document.querySelector('#input-answer').disabled = false;
             document.querySelector('#input-answer').focus();
-            document.querySelector('.word-card').textContent = flashcards_table[index][1];
+            document.querySelector('.word-card').textContent = flashcards_table[index][front];
         }
         function CheckIfCorrect(e){
             if (e.key === 'Enter') {
                     if(document.querySelector('#input-answer').disabled === false){
                         const input = document.querySelector('#input-answer').value;
-                        if( input === answer){
+                        if( input.toLowerCase() === answer.toLowerCase()){
                             document.querySelector('#input-answer').style.color = 'green';
+                            flashcards_table.splice(index, 1);
+                            sendRequest();
                         } else {
                             document.querySelector('#input-answer').style.color = 'red';
                             document.querySelector('.correct-answer').style.display = "flex";
@@ -51,7 +103,55 @@
                     }
                 }
         }
-        ShowNewWordToGuess();
+        function sendRequest(){
+            $.ajax({
+                url: '/set-writing-true-' + correct_index,
+            })
+        }
+        function ShowNextWord(){
+            if(flashcards_table.length > 0){
+                ShowNewWordToGuess();
+            } else{
+                document.querySelector(".word-card").style.display = "none";
+                document.querySelector(".answer-input").style.display = "none";
+                document.querySelector(".next-word").style.display = "none";
+                document.querySelector(".flashcard-learn").innerHTML = "<button class='try-again-button' onclick='TryAgain()'>Sprobuj jeszcze raz</button>"
+            }
+        }
+        function TryAgain(){
+            window.location="/set-writing-false-{{module_id}}";
+        }
+
+        function showOptions() {
+            document.querySelector(".popup-background").style.display = "flex";
+        }
+
+        function closeOptions() {
+            document.querySelector(".popup-background").style.display = "none";
+        }
+
+        function changeLangOption(){
+            var hiszp = document.querySelector("#hiszp")
+            var pol = document.querySelector("#pol")
+            if(hiszp.checked){
+                front = 2;
+                back = 1;
+                ShowNewWordToGuess();
+                document.querySelector(".popup-background").style.display = "none";
+            }
+            else if(pol.checked){
+                front = 1;
+                back = 2;
+                ShowNewWordToGuess();
+                document.querySelector(".popup-background").style.display = "none";
+            }
+        }
+
+        if(flashcards_table.length > 0){
+            ShowNewWordToGuess();
+        } else{
+            TryAgain()
+        }
     </script>
 </div>
 {% endblock %}

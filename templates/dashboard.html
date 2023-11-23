@@ -1,32 +1,49 @@
 {% extends 'base.html' %}
 
 {% block head %}
+<title>Mój profil</title>
 {% endblock %}
 
 
 {% block body %}
+<div class="hidden" id="pop-back">
+    <form class="change_photo_form" action="/add-avatar" method="POST" enctype="multipart/form-data">
+        <div class="settings-close"><button onclick="closeOptions()"><ion-icon name="close-outline"></ion-icon></button></div>
+        <div class="image_selector">
+            {% for image_file in image_files %}
+                <input name="image_option" type="radio" id="{{image_file}}" value="{{image_file}}" style="background-image: url('static/images/default/{{image_file}}');" onclick="noBorderImageSelector()"/>
+            {% endfor %}
+            <input id="profile_picture" type="file" name="profile_picture" accept="image/*" style="display: none" onchange="displayImage()">
+            <label for="profile_picture" id="previewSelectedImage" class="image-selector-label"><ion-icon name="add-outline"></ion-icon></label>
+        </div>
+    <input class="btn-change" type="submit" name="submit" value="Zapisz">
+    </form>
+</div>
 <div class="dashboard">
 <div class="user_information">
     <div class="avatar" {% if current_user.profile_picture %} style="background-image: url('static/images/{{current_user.profile_picture}}')"{% endif %}>
         <button class="edit_profile_pic_icon" onclick='showChangePicOptions()'><ion-icon name="pencil-outline"></ion-icon></button>
     </div>
-    <div class="hidden" id="change_profile_pic">
-    <form class="change_photo_form" action="/add-avatar" method="POST" enctype="multipart/form-data">
-        <div class="image_selector">
-            {% for image_file in image_files %}
-                <input name="image_option" type="radio" id="{{image_file}}" value="{{image_file}}" style="background-image: url('static/images/default/{{image_file}}');"/>
-            {% endfor %}
-        </div>
-    
-    <input id="profile_picture" type="file" name="profile_picture" accept="image/*">
-    <input class="btn-change" type="submit" name="submit" value="Zapisz">
-    </form>
-    </div>
-    <div class="user-data">
+    <div class="user_data">
         <p><strong>Nazwa użytkownika:</strong> {{ current_user.username }}</p>
         <a class="change_password" href="/change-password">Zmień hasło</a>
     </div>
 </div>
-<div class="user_achievements"><p>Osiągnięcia</p></div>
+<div class="user_courses"><p>Moje kursy</p>
+{% if courses %}
+    {% for course in courses %}
+        <div class="course">
+            <a class="course_name" href="/module_id={{course[0]}}"><p>{{course[1]}}</p></a>
+            <div class="course_progress">
+                <div class="progress_bar" id="progress_bar_{{course[0]}}" style="width: {{course[2]}}%"></div>
+            </div>
+            <div class="progress_percent">{{course[2]}}%</div>
+        </div>
+    {% endfor %}
+    <div class="find-more-courses"><a href="/modules">Więcej kursów</a></div>
+{% else %}
+<p>Nie masz jeszcze żadnych kursów. <a href="modules">Przeglądaj kursy</a></p>
+{% endif %}
+</div>
 </div>
 {% endblock %}
