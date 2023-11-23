@@ -1,6 +1,8 @@
 body{
     margin: 0;
     font-family: Arial, sans-serif; 
+    display: flex;
+    flex-direction: column;
 }
 header{
     width: 100%;
@@ -9,7 +11,7 @@ header{
     display: flex;
     background: #F8F7F7; 
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.10);
-    z-index: 3;
+    z-index: 9;
 }
 .header_to_left{
     display: flex;
@@ -22,10 +24,6 @@ header{
     margin-right: 10px;
     width: 50%;
     height: 15vh;
-    /*
-    display: flex;
-    align-items: center;
-    justify-content: right; */
 }
 .logo-header{
     color: black; 
@@ -33,6 +31,9 @@ header{
     text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
     word-wrap: break-word;
     margin-left: 30px;
+}
+.logo-link{
+    text-decoration: none;
 }
 .login-button-outter{
     display: flex;
@@ -102,18 +103,30 @@ ion-icon[name="log-out-outline"]{
 footer{
     width:100%;
     background-color: #F8F7F7; 
-    position: absolute;
     display: flex;
     font-size: 10px;
     justify-content: center;
+    z-index: 9;
 }
+
+footer a{
+    color: black;
+    text-decoration: none;
+}
+
+footer a:hover{
+    text-decoration: underline;
+}
+
 .footer-column{
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     flex-direction: column;
     width: 25%;
+    margin-left: 10%;
 }
+
 .footer-column p{
     margin-top: 2px;
     margin-bottom: 2px;
@@ -280,15 +293,26 @@ ion-icon[name="ellipse"]{
     width: 100%;
     background: #F8F7F7;
     border: none;
-    border-bottom: 1px solid grey;
-    margin-bottom: 5px;
-    margin-top: 10px;
+    /*border-bottom: 1px solid grey; */
+    /*margin-bottom: 10px;*/
+    margin-top: 5px;
     padding-bottom: 10px;
     padding-top: 10px;
 }
 
 .password-input:focus{
     outline: none;
+}
+
+.input-label{
+    display: flex;
+    font-size: 1em;
+    margin: 0px 0px 0px 2px;
+}
+
+.change-password-form{
+    width: 80%;
+    font-size: 0.6em;
 }
 
 .btn{
@@ -299,6 +323,7 @@ ion-icon[name="ellipse"]{
     display: flex;
     margin: auto;
     margin-top: 15px;
+    margin-bottom: 15px;
     height: 20px;
     width: 40%;
     font-size: 12px;
@@ -353,7 +378,6 @@ ion-icon[name="ellipse"]{
     width: 70px;
     height: 70px;
     margin-top: 30px;
-    background: green;
     border-radius: 50%;
     background-size: cover;
 }
@@ -400,12 +424,19 @@ ion-icon[name="pencil-outline"]{
     flex-direction: column;
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.10);
 }
+
+.change_photo_form .settings-close button{
+    margin-right: 5px;
+    background: #F8F7F7;
+}
+
 .image_selector{
     display: flex;
     width: 100%;
     justify-content: space-around;
+    flex-wrap: wrap;
 }
-input:is([type="radio"]){
+.image_selector input:is([type="radio"]){
     -webkit-appearance: none;
     background-size: cover;
     width: 2em;
@@ -413,9 +444,19 @@ input:is([type="radio"]){
     border-radius: 50%;
     cursor: pointer;
 }
-input:is([type="radio"]):checked{
+.image_selector input:is([type="radio"]):checked{
     border: solid;
     border-color: blueviolet;
+}
+
+.image-selector-label{
+    -webkit-appearance: none; 
+    background-size: cover; 
+    width: 1.5em;
+    height: 1.5em;
+    border-radius: 50%;
+    cursor: pointer; 
+    margin: 3px 3px 0px 5px;
 }
 
 
@@ -426,19 +467,55 @@ ion-icon[name="add-outline"]{
     background: grey;
 }
 
-.user-data{
+.user_data{
     width: 80%;
     text-align: left;
     margin-top: 10px;
     font-size: 0.6em;
 }
 
-.user_achievements{
+.user_courses{
     width: 60%;
     height:100%;
     border-radius: 0px 15px 15px 0px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
-
+.course{
+    width: 80%;
+    border: solid black 1px;
+    margin: 5px;
+    display: flex;
+    padding: 5px;
+    align-items: center;
+}
+.course_name{
+    width: 30%;
+    color:#000;
+    text-decoration: none;
+    font-size: 13px;
+}
+.course_name p{
+    margin: 0;
+}
+.course_progress{
+    width: 60%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 10px;
+}
+.progress_bar{
+    height: 5px;
+    background-color: #A7B1EA;
+}
+.progress_percent{
+    width: 10%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 .change_password{
     color: #000;
     text-decoration: none;
@@ -544,6 +621,12 @@ ion-icon[name="add-outline"]{
     align-items: center;
     justify-content: center;
 }
+.flashcards-display button{
+    outline: none;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
 .flashcards-panel{
     height: 100%;
     display: flex;
@@ -552,6 +635,12 @@ ion-icon[name="add-outline"]{
     margin-left: 5%;
     margin-right: 5%;
     align-items: left;
+}
+.module-title-2{
+    margin-top:0;
+    margin-bottom: 0;
+    margin-left: auto;
+    margin-right: auto;
 }
 .module-title{
     margin-left: auto;
@@ -570,7 +659,11 @@ ion-icon[name="add-outline"]{
     border-radius: 10px;
     padding: 5px;
     margin: 5px;
+    color: black;
+    text-transform: uppercase;
+    font-size: 0.8em;
 }
+
 
 /* writing.html */
 .flashcard-learn{
@@ -578,6 +671,7 @@ ion-icon[name="add-outline"]{
     display: flex;
     align-items: center;
     flex-direction: column;
+    padding-top: 20px;
 }
 
 .word-card{
@@ -690,4 +784,159 @@ ion-icon[name="add-outline"]{
 
 .word-card-answer:disabled{
     color: black;
+}
+
+.back-to-menu{
+    display: flex;
+    justify-content: space-around;
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+.back-to-menu button{
+    outline: none;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.back-button{
+    color: black;
+}
+
+.find-more-courses{
+    display: flex;
+    width: 100%;
+    padding-right: 10%;
+    margin-top: 15px;
+    justify-content: flex-end;
+    font-size: 0.8em;
+    color: black;
+}
+
+.find-more-courses a{
+    color: black;
+}
+
+.popup-background{
+    position: absolute; 
+    width: 100%; 
+    min-height: 85vh; 
+    background: rgb(0, 0, 0, 0.5); 
+    display: none;
+    z-index: 5;
+    align-items: center;
+    justify-content: center;
+}
+
+.settings-popup{
+    display: flex;
+    flex-direction: column;
+    min-width: 20%;
+    min-height: 20vh;
+    background: #D0E7F4;
+    border-radius: 10px;
+    box-shadow: 1px 1px 1px 1px grey;
+    align-items: center;
+    padding-bottom: 10px;
+}
+
+.settings-close{
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.settings-close button{
+    outline: none;
+    border: none;
+    border-radius: 15px;
+    background: #D0E7F4;
+    cursor: pointer;
+}
+
+.question-language{
+    display: flex;
+    flex-direction: column;
+}
+
+.question-language button{
+    margin-top: 10px;
+    margin-left: auto;
+    margin-right: auto;
+    outline: none;
+    width: 60%;
+    background: none;
+    border: solid 1px black;
+    border-radius: 10px;
+    cursor: pointer;
+}
+.show{
+    display: flex;
+}
+
+
+/* KEYBOARD */
+
+.keyboard{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 50%;
+    margin-bottom: 10px;
+}
+
+.keyboard button{
+    outline: none;
+    border: none;
+    background: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.keys{
+    width: 100%;
+    display: none;
+    flex-direction: column;
+}
+
+.keys-row{
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+.key-button{
+    display: flex;
+    width: 20px;
+    height: 20px;
+    align-items: center;
+    justify-content: center;
+}
+
+.caret-up{
+    display: none;
+}
+
+.input-field{
+    width: 100%;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid grey;
+    margin-bottom: 10px;
+}
+
+.eye-off-outline{
+    display: none;
+}
+
+.remove-course{
+    display: flex;
+    justify-content: flex-end;
+    margin-right: 20px;
+    margin-left: auto;
+    margin-top: 20px;
+    font-size: 0.6em;
+    width: 30%; 
 }

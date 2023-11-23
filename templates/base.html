@@ -4,6 +4,7 @@
     <meta charset='utf-8'>
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel = "icon" href ="{{ url_for('static', filename='images/FM.jpg') }}" type = "image/x-icon"> 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="{{url_for('static', filename='javascript/script.js')}}"></script>
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
@@ -12,7 +13,7 @@
 </head>
 <body>
     <header>
-        <div class="header_to_left"><p class="logo-header">FiszkoMania</p></div>
+        <div class="header_to_left"><a class="logo-link" href="/modules"><p class="logo-header">FiszkoMania</p></a></div>
         {% if current_user.is_authenticated %}
             <div class="header_to_right">
                 <button class="user-button" onclick="RollDownUserMenu()"><p class="logout">{{current_user.username}}</p>
@@ -33,19 +34,17 @@
     </div>
     <footer>
         <div class="footer-column">
-            <p>Link1</p>
-            <p>Link1</p>
-            <p>Link1</p>
+            <image src="{{ url_for('static', filename='images/FM.jpg') }}" style="max-height:60px; margin-top: 10px; margin-bottom: 10px"></image>
         </div>
         <div class="footer-column">
-            <p>Link2</p>
-            <p>Link2</p>
-            <p>Link2</p>
+            <p><a href="/about-me">O mnie</a></p>
+            <p><a href="/dashboard">Moje konto</a></p>
+            <p><a href="/modules">Zobacz kursy</a></p>
         </div>
         <div class="footer-column">
-            <p>Link3</p>
-            <p>Link3</p>
-            <p>Link3</p>
+            <p>Zaobserwuj nas!</p>
+            <p><a href="https://github.com/domi-pro/FiszkoMania"><ion-icon name="logo-github"></ion-icon>FiszkoMania</a></p>
+            <p><a href="https://instagram.com"><ion-icon name="logo-instagram"></ion-icon>FiszkoMania_official</a></p>
         </div>
     </footer>
 </body>

@@ -1,13 +1,23 @@
 {% extends 'base.html' %}
 
 {% block head %}
-<title>Speaking</title>
+<title>Mówienie - {{table_name}}</title>
 {% endblock %}
 
 {% block body %}
+<div class="popup-background">
+    <div class="settings-popup">
+        <div class="settings-close"><button onclick="closeInfo()"><ion-icon name="close-outline"></ion-icon></button></div>
+        <p>W tym trybie nie ma możliwości zmiany języka</p>
+    </div>
+</div>
 <div class="panel-background">
     <div class="flashcards-panel">
-        <h3 class="module-title">{{table_name}} - speaking</h3>
+        <div class="back-to-menu">
+            <a href="/module_id={{module_id}}" class="back-button"><ion-icon name="chevron-back-circle-outline"></ion-icon></a>
+            <h4 class="module-title-2">{{table_name}} - speaking</h4>
+            <button onclick="showInfo()"><ion-icon name="information-circle-outline"></ion-icon></button>
+        </div>
         <div class="flashcard-learn">
             <div class="word-card"></div>
             <div class="user-answer">
@@ -35,13 +45,14 @@
             recognition.stop();
         });
         function startSpeakRecognition(){
-            //document.querySelector('#spoken-text').textContent = "";
             recognition.start();
         }
         function ShowNewWordToGuess(){
             index = Math.floor(Math.random() * flashcards_table.length);
             correct_index = flashcards_table[index][0];
             answer = flashcards_table[index][2];
+            answer_lower = answer.toLowerCase();
+            answer_without_signs = answer_lower.replace(/[¿?!¡]/g, "");
             document.querySelector('.word-card').textContent = flashcards_table[index][1];
             document.querySelector('.correct-answer').style.display = "none";
             document.querySelector('.correct-answer').textContent = "";
@@ -53,14 +64,11 @@
         function CheckIfCorrect(e){
             if (e.key === 'Enter') {
                 const input = document.querySelector('#spoken-text').textContent;
-                console.log(input);
-                if( input === answer){
-                    console.log("good");
+                if( input.toLowerCase() === answer_without_signs){
                     document.querySelector('#spoken-text').style.color = 'green';
                     flashcards_table.splice(index, 1);
                     sendRequest();
                 } else {
-                    console.log("bad");
                     document.querySelector('#spoken-text').style.color = 'red';
                     document.querySelector('.correct-answer').style.display = "flex";
                     document.querySelector('.correct-answer').textContent = "Poprawna odpowiedź: " + answer;
@@ -87,6 +95,15 @@
         function TryAgain(){
             window.location="/set-speaking-false-{{module_id}}";
         }
+
+        function showInfo() {
+            document.querySelector(".popup-background").style.display = "flex";
+        }
+
+        function closeInfo() {
+            document.querySelector(".popup-background").style.display = "none";
+        }
+
         if(flashcards_table.length > 0){
             ShowNewWordToGuess();
         } else{

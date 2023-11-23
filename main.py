@@ -80,7 +80,10 @@ with app.app_context():
 # Routes
 @app.route('/')
 def index():
-    return render_template('index.html');
+    bool = 0
+    if current_user.is_authenticated:
+        bool = 1
+    return render_template('index.html', bool=bool)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -107,6 +110,7 @@ def signup():
         
         username = request.form['username']
         password = request.form['password']
+        password_repeat = request.form['password_repeat']
 
         user = Users.query.filter_by(username=username).first()
 
@@ -114,18 +118,25 @@ def signup():
             flash("Użytkownik o takiej nazwie już istnieje. Spróbuj ponownie")
             return redirect(url_for('signup'))
         
-        new_user = Users(username=username, password=generate_password_hash(password, method='sha256'))
+        if username=="":
+            flash("Nazwa użytkownika nie może być pusta")
+            return redirect(url_for('signup'))
 
-        db.session.add(new_user)
-        db.session.commit()
-        return redirect(url_for('login'))
-
+        if password==password_repeat:
+            new_user = Users(username=username, password=generate_password_hash(password, method='sha256'), profile_picture="default/person-outline.jpg")
+            db.session.add(new_user)
+            db.session.commit()
+            login_user(new_user)
+            return redirect(url_for('dashboard'))
+        else:
+            flash("Hasła nie są identyczne. Spróbuj ponownie")
+            return redirect(url_for('signup'))
     return render_template('signup.html')
 
 @app.route('/modules')
 @login_required
 def modules():
-    modules = db.session.query(Module.module_id, Module.module_name).all()
+    modules = db.session.query(Module.module_id, Module.module_name, Module.module_description).all()
     return render_template('modules.html', modules=modules)
 
 @app.route('/signup-to-course-<id>')
@@ -134,16 +145,13 @@ def addUserToCourse(id):
     user = current_user
     module = Module.query.get(id)
     user_module_progress = Progress.query.filter_by(user=user, module=module).all()
-    if user_module_progress:
-        print("This user is already assigned to this module")
-    else:
+    if len(user_module_progress) == 0:
         flashcards = Flashcards.query.filter_by(module_id = id).all()
         for flashcard in flashcards:
             progress = Progress(user = user, module = module, flashcard_id = flashcard.flashcard_id)
             db.session.add(progress)
         db.session.commit()
-        print("Records added succesfully")
-    return redirect(url_for('modules'))
+    return redirect(url_for('modulePanel', id=id))
 
 @app.route('/module_id=<id>')
 @login_required
@@ -296,7 +304,26 @@ def logout():
 @login_required
 def dashboard():
     image_files = [f for f in os.listdir('static/images/default') if f.endswith(('jpg', 'png', 'gif'))]
-    return render_template('dashboard.html', image_files=image_files)
+    courses_ids = Progress.query.filter_by(user_id=current_user.id).with_entities(Progress.module_id).distinct().all()
+    courses = []
+    for id in courses_ids:
+        module = Module.query.filter_by(module_id=id[0]).first()
+        if module:
+            flashcards_from_module = Progress.query.filter_by(user_id=current_user.id, module_id=id[0]).all()
+            divisor = len(flashcards_from_module)*4
+            dividend = 0
+            for flashcard in flashcards_from_module:
+                if flashcard.quiz == 1:
+                    dividend += 1
+                if flashcard.writing == 1:
+                    dividend += 1
+                if flashcard.listening == 1:
+                    dividend += 1
+                if flashcard.speaking == 1:
+                    dividend += 1
+            progress = int(dividend/divisor * 100)
+            courses.append([module.module_id, module.module_name, progress])
+    return render_template('dashboard.html', image_files=image_files, courses=courses)
 
 @app.route('/add-avatar', methods=['GET', 'POST'])
 @login_required
@@ -316,7 +343,7 @@ def add_avatar():
             user_update = Users.query.get_or_404(current_user.id)
             user_update.profile_picture = profile_picture  
         db.session.commit()
-    return render_template('dashboard.html', image_files=image_files)
+    return redirect(url_for('dashboard'))
 
 @app.route('/change-password', methods=['GET', 'POST'])
 @login_required
@@ -344,6 +371,23 @@ def changePassword():
             return redirect(url_for('changePassword'))
         
     return render_template('change_password.html')
+
+@app.route('/about-me')
+def aboutme():
+    return render_template('about_me.html')
+
+@app.route('/leave-course-<module_id>', methods=['GET', 'POST'])
+def leaveCourse(module_id):
+    if request.method == 'POST':
+        try:
+            db.session.query(Progress).filter_by(user_id=current_user.id, module_id=module_id).delete()
+            db.session.commit()
+            return redirect(url_for('modulePanel', id=module_id))
+        except Exception as e:
+            db.session.rollback()
+            flash("Niestety coś poszło nie tak")
+            return redirect(url_for('modulePanel', id=module_id))
+
 
 if __name__ == "__main__":
     app.run(debug=True)

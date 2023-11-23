@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block head %}
-<title>Login Page</title>
+<title>Logowanie</title>
 {% endblock %}
 
 {% block body %}
@@ -16,9 +16,9 @@
             </div>
         {% endif %}
         {% endwith %}
-        <form method="post">
-            <input type="text" placeholder="Username" name="username" class="username-input" value="{{ request.form.username }}"><br>
-            <input type="password" placeholder="Password" name="password" class="password-input" value="{{ request.form.password}}"><br>
+        <form method="post" style="width:90%">
+            <div style="width:100%"><input type="text" placeholder="Nazwa użytkownika" name="username" class="username-input" value="{{ request.form.username }}"></div>
+            <div class="input-field"><input type="password" placeholder="Hasło" name="password" class="password-input" value="{{ request.form.password}}"><ion-icon onclick="showPassword(this)" class="eye-outline" name="eye-outline"></ion-icon><ion-icon onclick="hidePassword(this)" class="eye-off-outline" name="eye-off-outline"></ion-icon></div>
             <input class="btn" type="submit" name="submit" value="Zaloguj">
         </form>
         <br>

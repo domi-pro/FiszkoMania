@@ -1,13 +1,27 @@
 {% extends 'base.html' %}
 
 {% block head %}
-<title>Modules</title>
+<title>{{table_name}}</title>
 {% endblock %}
 
 {% block body %}
+<div class="popup-background">
+    <div class="settings-popup">
+        <div class="settings-close"><button onclick="closeInfo()"><ion-icon name="close-outline"></ion-icon></button></div>
+        <p>Czy na pewno chcesz wypisać się z kursu: <br>{{table_name}}?</p>
+        <div style="display:flex"><form method="post" action="/leave-course-{{moduleID}}"><button>Tak, wypisz mnie</button></form><button onclick="closeInfo()">Nie, uczę się dalej</button></div>
+    </div>
+</div>
 <div class="panel-background">
     <div class="flashcards-panel">
         <h3 class="module-title">{{table_name}}</h3>
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="login-error">
+                {{ messages[0] }}
+            </div>
+        {% endif %}
+        {% endwith %}
         <div class="flashcards-content">
             <div class="flashcards-display">
                 <div class="flashcard-outter">
@@ -26,7 +40,7 @@
                         {% endfor %}
                     </div>
                 </div>
-                <div><button onclick="PreviousFlashcard()"><ion-icon name="caret-back-outline"></ion-icon></button></ion-icon><button onclick="NextFlashcard()"><ion-icon name="caret-forward-outline"></ion-icon></button></div>
+                <div><button onclick="PreviousFlashcard()" id="prev-flashcard" disabled><ion-icon name="caret-back-outline"></ion-icon></button></ion-icon><button onclick="NextFlashcard()" id="next-flashcard"><ion-icon name="caret-forward-outline"></ion-icon></button></div>
             </div>
             {% if hide == False %}
             <div>
@@ -41,6 +55,7 @@
             </div>
             {% endif %}
         </div>
+        {% if hide == True %}<div class="remove-course" onclick="showInfo()"><ion-icon name="trash-outline"></ion-icon>Wypisz mnie z kursu</div>{% endif %}
     </div>
     <script src="{{url_for('static', filename='javascript/flashcard.js')}}"></script>
 </div>

@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block head %}
-<title>Modules</title>
+<title>Moduły</title>
 {% endblock %}
 
 {% block body %}
@@ -10,7 +10,7 @@
         <h3>Wybierz zestaw którego chcesz się uczyć</h3>
         <div class="modules-choices">
             {% for module in modules %}
-                <button class="module" id="{{module[0]}}" onclick="DisplayFlashcardsFrom(this.id)">{{module[1]}}</button>
+                <button title="{{module[2]}} "class="module" id="{{module[0]}}" onclick="DisplayFlashcardsFrom(this.id)">{{module[1]}}</button>
             {% endfor %}
         </div>
     </div>

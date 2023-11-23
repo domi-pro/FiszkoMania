@@ -1,13 +1,28 @@
 {% extends 'base.html' %}
 
 {% block head %}
-<title>Quiz</title>
+<title>Quiz - {{table_name}}</title>
 {% endblock %}
 
 {% block body %}
+<div class="popup-background">
+    <div class="settings-popup">
+        <div class="settings-close"><button onclick="closeOptions()"><ion-icon name="close-outline"></ion-icon></button></div>
+        <p>Ustawienia</p>
+        <div class="question-language" method="POST">
+            <div><input type="radio" name="lang-opt" id="hiszp"><label for="hiszp">Pyt: hiszpański Odp: polski</label></div>
+            <div><input type="radio" name="lang-opt" id="pol" checked><label for="pol">Pytanie: polski Odp: hiszpański</label></div>
+            <button onclick="changeLangOption()">Zapisz wybór</button>
+        </div>
+    </div>
+</div>
 <div class="panel-background">
     <div class="flashcards-panel">
-        <h3 class="module-title">{{table_name}} - quiz</h3>
+        <div class="back-to-menu">
+            <a href="/module_id={{module_id}}" class="back-button"><ion-icon name="chevron-back-circle-outline"></ion-icon></a>
+            <h4 class="module-title-2">{{table_name}} - quiz</h4>
+            <button onClick="showOptions()"><ion-icon name="settings-outline"></ion-icon></button>
+        </div>
         <div class="flashcard-learn">
             <div class="word-card"></div>
             <div class="quiz-answers">
@@ -28,11 +43,11 @@
     <script>
         const flashcards_table = {{ flashcards | tojson }};
         const flashcards_answers_table = {{ flashcards | tojson }};
-        console.log(flashcards_table);
         let correct_answer;
         let correct_answer_index;
         let correct_index;
-        //document.addEventListener('keypress', CheckIfCorrect);
+        let front = 1;
+        let back = 2;
         function shuffle(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -42,12 +57,12 @@
 
         function ShowNewWordToGuess(){
             correct_index = Math.floor(Math.random() * flashcards_table.length);
-            correct_answer = flashcards_table[correct_index][2];
+            correct_answer = flashcards_table[correct_index][back];
             correct_answer_index = flashcards_table[correct_index][0];
             document.querySelector('.correct-answer').style.display = "none";
             document.querySelector('.correct-answer').textContent = "";
             document.querySelector('.next-word').style.display = "none";
-            document.querySelector('.word-card').textContent = flashcards_table[correct_index][1];
+            document.querySelector('.word-card').textContent = flashcards_table[correct_index][front];
             document.querySelector('#answer-1').style.borderStyle = "none";
             document.querySelector('#answer-2').style.borderStyle = "none";
             document.querySelector('#answer-3').style.borderStyle = "none";
@@ -59,7 +74,7 @@
             const allAnswers = [];
             while (allAnswers.length < 3) {
                 const randomIncorrectIndex = Math.floor(Math.random() * flashcards_answers_table.length);
-                const incorrectWord = flashcards_answers_table[randomIncorrectIndex][2];
+                const incorrectWord = flashcards_answers_table[randomIncorrectIndex][back];
                 if (incorrectWord !== correct_answer && !allAnswers.includes(incorrectWord)) {
                     allAnswers.push(incorrectWord);
                 }
@@ -114,6 +129,31 @@
         }
         function TryAgain(){
             window.location="/set-quiz-false-{{module_id}}";
+        }
+
+        function showOptions() {
+            document.querySelector(".popup-background").style.display = "flex";
+        }
+
+        function closeOptions() {
+            document.querySelector(".popup-background").style.display = "none";
+        }
+
+        function changeLangOption(){
+            var hiszp = document.querySelector("#hiszp")
+            var pol = document.querySelector("#pol")
+            if(hiszp.checked){
+                front = 2;
+                back = 1;
+                ShowNewWordToGuess();
+                document.querySelector(".popup-background").style.display = "none";
+            }
+            else if(pol.checked){
+                front = 1;
+                back = 2;
+                ShowNewWordToGuess();
+                document.querySelector(".popup-background").style.display = "none";
+            }
         }
 
         if(flashcards_table.length > 0){
